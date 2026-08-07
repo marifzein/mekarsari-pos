@@ -1,0 +1,76 @@
+<?php
+
+namespace App\Http/Controllers;
+
+use App\Models\Transaction;
+use App\Models\PembatalanPenjualan;
+use App\Models\Product;
+use App\Models\StockMovement;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+
+class VoidTransactionController extends Controller
+{
+    // Halaman Riwayat Transaksi Dibatalkan
+    public function index()
+    {
+        $voids = PembatalanPenjualan::with(['transaction', 'user'])
+            ->latest()
+            ->paginate(10);
+
+        return view('transactions.void_index', compact('voids'));
+    }
+
+    // Eksekusi Pembatalan
+    public function store(Request $request, $id)
+    {
+        $request->validate([
+            'alasan' => 'required|string|max:255',
+        ]);
+
+        DB::transaction(function () use ($request, $id) {
+            $transaction = Transaction::with('details')->findOrFail($id);
+
+            if ($transaction->status === 'voided') {
+                return;
+            }
+
+            // 1. Restore Stok & Catat di stock_movements
+            foreach ($transaction->details as $detail) {
+                $product = Product::find($detail->product_id);
+
+                if ($product) {
+                    $stockBefore = $product->stok;
+                    $stockAfter = $stockBefore + $detail->qty;
+
+                    // Update stok fisik produk
+                    $product->update(['stok' => $stockAfter]);
+
+                    // Log pergerakan stok
+                    StockMovement::create([
+                        'product_id'   => $product->id,
+                        'type'         => 'in', // Kembalikan stok
+                        'qty'          => $detail->qty,
+                        'stock_before' => $stockBefore,
+                        'stock_after'  => $stockAfter,
+                        'reference_no' => $transaction->no_nota,
+                        'notes'        => 'Pembatalan transaksi (Void)',
+                    ]);
+                }
+            }
+
+            // 2. Ubah Status Transaksi
+            $transaction->update(['status' => 'voided']);
+
+            // 3. Catat di tabel pembatalan_penjualans
+            PembatalanPenjualan::create([
+                'transaction_id' => $transaction->id,
+                'user_id'        => Auth::id(),
+                'alasan'         => $request->alasan,
+            ]);
+        });
+
+        return redirect()->back()->with('success', 'Transaksi berhasil dibatalkan dan stok telah dikembalikan.');
+    }
+}

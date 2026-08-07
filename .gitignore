@@ -1,0 +1,43 @@
+# Laravel
+.env
+.env.*
+!.env.example
+
+/vendor
+/node_modules
+
+/public/hot
+/public/storage
+
+/storage/*.key
+/storage/pail
+
+# IDE
+.vscode/
+.idea/
+.fleet/
+.zed/
+.nova/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# PHPUnit
+.phpunit.result.cache
+.phpunit.cache
+
+# Auth
+auth.json
+
+# Homestead
+Homestead.yaml
+Homestead.json
+
+# Project khusus
+
+#execute on local
+run-dev.bat
