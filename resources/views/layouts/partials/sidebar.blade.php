@@ -8,12 +8,20 @@
     {{-- Logo --}}
     <div class="px-6 py-6 border-b border-slate-800/20">
         <div class="flex items-center gap-3">
-            <div class="w-11 h-11 rounded-full border border-x-2 border-indigo-400 text-indigo-400 flex items-center justify-center flex-shrink-0">
+            {{-- <div class="w-11 h-11 rounded-full border border-x-2 border-indigo-400 text-indigo-400 flex items-center justify-center flex-shrink-0">
                 <i class="ri-shopping-cart-2-line text-xl"></i>
+            </div> --}}
+            <!-- Logo Image -->
+            <div class="w-11 h-11 rounded-full border border-x-2 border-white text-indigo-400 flex items-center justify-center flex-shrink-0 bg-white">
+                <img 
+                    src="{{ asset('images/tatakas-color.png') }}" 
+                    alt="TataKas Logo" 
+                    class="w-7 h-7 object-contain flex-shrink-0 "
+                >
             </div>
             <div x-show="sidebarOpen" x-transition:enter="transition opacity duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">    
-                <h1 class="font-bold text-lg text-indigo-400 tracking-widest">FlowPOS</h1>   
-                <p class="text-sm text-slate-300">{{ $setting->nama_toko ?? 'Retail App' }}</p>
+                <h1 class="font-bold text-lg text-indigo-400 tracking-widest">TataKas</h1>   
+                <p class="text-sm text-slate-300">Toko {{ $setting->nama_toko ?? 'Retail App' }}</p>
             </div>
         </div>
     </div>
