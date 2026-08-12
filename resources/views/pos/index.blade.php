@@ -1113,7 +1113,17 @@ function posKasir() {
                         .toLowerCase()
                         .includes(keyword)
 
+                    // {
+                    // let isAktif = c.status == 1 || c.status === undefined; 
+
+                    // let matchKeyword = c.nama.toLowerCase().includes(keyword) ||
+                    //                 c.kode_pelanggan.toLowerCase().includes(keyword);
+
+                    // return isAktif && matchKeyword;
+                    // }
+                    
                 ).slice(0,8);
+                // hrs aktif 
 
             this.customerIndex = -1;
         },

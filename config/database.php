@@ -67,6 +67,21 @@ return [
             ]) : [],
         ],
 
+        'mekarsari' => [
+            'driver' => 'mysql',
+            'host' => env('DB_MEKARSARI_HOST', '127.0.0.1'),
+            'port' => env('DB_MEKARSARI_PORT', '3306'),
+            'database' => env('DB_MEKARSARI_DATABASE'),
+            'username' => env('DB_MEKARSARI_USERNAME'),
+            'password' => env('DB_MEKARSARI_PASSWORD'),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

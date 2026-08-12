@@ -25,8 +25,9 @@ class Transaction extends Model
 
     public function customerRelation()
     {
-        // Menghubungkan kolom 'pelanggan' di transactions ke 'kode_pelanggan' di customers
-        return $this->belongsTo(Customer::class, 'pelanggan', 'kode_pelanggan');
+        // Menghubungkan kolom 'pelanggan' di transactions ke 'id' di customers
+        // return $this->belongsTo(Customer::class, 'pelanggan', 'kode_pelanggan');
+        return $this->belongsTo(Customer::class, 'pelanggan');
     }
 
     // Relasi ke Pembatalan Penjualan

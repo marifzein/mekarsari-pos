@@ -8,12 +8,12 @@
     {{-- Logo --}}
     <div class="px-6 py-6 border-b border-slate-800/20">
         <div class="flex items-center gap-3">
-            <div class="w-11 h-11 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0">
-                <i class="ri-shopping-cart-2-line text-2xl"></i>
+            <div class="w-11 h-11 rounded-full border border-x-2 border-indigo-400 text-indigo-400 flex items-center justify-center flex-shrink-0">
+                <i class="ri-shopping-cart-2-line text-xl"></i>
             </div>
             <div x-show="sidebarOpen" x-transition:enter="transition opacity duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">    
-                <h1 class="font-bold text-lg">POS Minimarket</h1>   
-                <p class="text-xs text-slate-500">Sistem Penjualan</p>
+                <h1 class="font-bold text-lg text-indigo-400 tracking-widest">FlowPOS</h1>   
+                <p class="text-sm text-slate-300">{{ $setting->nama_toko ?? 'Retail App' }}</p>
             </div>
         </div>
     </div>
@@ -308,7 +308,7 @@
         {{-- ===================== --}}
         {{-- AKUNTING --}}
         {{-- ===================== --}}
-        @can('akses-owner-admin')
+        @can('akses-developer')
         <div class="relative group" x-data="{ hovered: false }" @mouseenter="hovered = true" @mouseleave="hovered = false">
             <button type="button" 
                 @click="if (sidebarOpen) { toggleMenu('akunting') }"

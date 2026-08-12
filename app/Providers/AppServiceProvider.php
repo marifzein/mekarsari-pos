@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Gate;
 use App\Models\FooterSetting;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\URL;
+// use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Schema;
+use App\Models\Setting;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,6 +34,13 @@ class AppServiceProvider extends ServiceProvider
         //     // Paksa semua URL (asset(), route(), dll) pakai https://
         //     URL::forceScheme('https');
         // }
+
+        // cek dan ambil data tabel settings
+        if (Schema::hasTable('settings')) {
+            $setting = Setting::first();
+            View::share('setting', $setting);
+        }
+
 
         // 1. MENU DEVELOPER & BACKUP DB: Hanya murni Admin IT saja
         Gate::define('akses-developer', function ($user) {

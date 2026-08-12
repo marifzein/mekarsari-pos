@@ -20,6 +20,7 @@ class CustomerController extends Controller
             $q->where('nama', 'like', "%{$search}%")
               ->orWhere('kode_pelanggan', 'like', "%{$search}%")
               ->orWhere('telepon', 'like', "%{$search}%");
+            //   ->orWhere('status', '=', 1);
 
         })
         ->latest()

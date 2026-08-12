@@ -32,12 +32,23 @@
         <div x-show="showMenu" x-transition:enter="transition-opacity ease-linear duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="showMenu = false" class="fixed inset-0 bg-black/50 backdrop-blur-xs"></div>
 
         <div x-show="showMenu" x-transition:enter="transition ease-in-out duration-200 transform" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in-out duration-200 transform" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full" class="relative flex flex-col w-72 max-w-xs bg-slate-900 text-slate-200 h-full p-5 shadow-2xl">
-            
+             
             <div class="flex justify-between items-center pb-4 border-b border-slate-800">
+                {{-- <i class="ri-store-2-fill text-indigo-400 text-xl"></i><h1 class="font-bold text-lg text-indigo-400 tracking-widest">FlowPOS</h1> 
                 <div class="flex items-center gap-2">
-                    <i class="ri-store-2-fill text-indigo-400 text-xl"></i>
-                    <span class="font-black text-sm tracking-wider text-white">MENU KASIR</span>
+                   
+                    <span class="font-black text-sm tracking-wider text-white">{{ $setting->nama_toko ?? 'Retail POS' }}</span>
+                </div> --}}
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-full border border-x-2 border-indigo-400 text-indigo-400 flex items-center justify-center flex-shrink-0">
+                        <i class="ri-shopping-cart-2-line text-xl"></i>
+                    </div>
+                    <div >    
+                        <h1 class="font-bold text-lg text-indigo-400 tracking-widest">FlowPOS</h1>   
+                        <p class="text-sm text-slate-300">{{ $setting->nama_toko ?? 'Retail App' }}</p>
+                    </div>
                 </div>
+                
                 <button @click="showMenu = false" class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 active:bg-slate-700">
                     <i class="ri-close-line text-lg"></i>
                 </button>

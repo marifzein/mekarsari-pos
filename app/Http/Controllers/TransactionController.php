@@ -59,7 +59,7 @@ class TransactionController extends Controller
     // save transaksi
     public function store(Request $request)
     {
-        $cart = $request->cart ?? [];
+        $cart = $request->cart ?? [];   
 
         if (count($cart) === 0) {
             return response()->json([
@@ -139,6 +139,14 @@ class TransactionController extends Controller
 
             }
 
+            /*
+            |--------------------------------------------------------------------------
+            | TOTAL POTONGAN GROSIR
+            |--------------------------------------------------------------------------
+            */
+            $totalDiskonGrosir = 0;
+            
+
             $transaction = Transaction::create([
 
                 'no_nota'      => $noNota,
@@ -152,13 +160,16 @@ class TransactionController extends Controller
 
                 'subtotal'     => $request->subtotal,
 
+                 // Akan di-update setelah semua item selesai
+                'diskon'       => 0,
+
                 'voucher'      => $request->voucher,
 
                 'card'         => $request->card,
 
                 'grand_total'  => $request->grand_total,
 
-                'cash'         => $request->cash,
+                'cash'         => $request->cash,   
 
                 'kembalian'    => $request->kembalian,
             ]);
@@ -169,16 +180,22 @@ class TransactionController extends Controller
                     throw new \Exception('Qty tidak valid');
                 }
 
+                $qty = (int) $item['qty'];
+
                 // 💡 Menggunakan eager load relasi productPrices agar tidak memicu query berulang-ulang
                 $product = Product::with('productPrices')->findOrFail($item['id']);
 
-                // menjaga stok tidak boleh minus
-                // if ($product->stok < $item['qty']) {
-                //     throw new \Exception($product->nama_barang . ' stok tidak cukup');
-                // }
+                /*
+                |--------------------------------------------------------------------------
+                | HARGA GROSIR
+                |--------------------------------------------------------------------------
+                */
 
-                // Kalkulasi harga setelah potongan grosir
-                $hargaFinal = (float) $product->harga;
+                $hargaNormal = (float) $product->harga;
+
+                $hargaFinal = $hargaNormal;
+
+                $potonganPerPcs = 0;
                 
                 // 💡 Disesuaikan dengan nama relasi di model Product: productPrices
                 if ($product->productPrices && $product->productPrices->count() > 0) {
@@ -187,13 +204,41 @@ class TransactionController extends Controller
 
                     foreach ($grosirList as $grosir) {
                         if ($item['qty'] >= $grosir->min_qty) {
-                            $hargaFinal = (float) $product->harga - (float) $grosir->potongan;
-                            break; 
+                            
+                            $potonganPerPcs = (float) $grosir->potongan;
+                            // yg disimpan ke trans detail adalah harga jual setelah dikurangi potongan
+                            $hargaFinal = $hargaNormal - $potonganPerPcs;
+
+                            break;
                         }
                     }
                 }
 
-                $itemSubtotal = $hargaFinal * $item['qty'];
+                /*
+                |--------------------------------------------------------------------------
+                | TOTAL DISKON ITEM
+                |--------------------------------------------------------------------------
+                |
+                | Contoh:
+                | Harga     = 10.000
+                | Qty       = 5
+                | Potongan  = 1.000 / pcs
+                |
+                | Diskon item = 1.000 × 5 = 5.000
+                |
+                */
+                $diskonItem =
+                $potonganPerPcs * $qty;
+
+                $totalDiskonGrosir += $diskonItem;
+
+                /*
+                |--------------------------------------------------------------------------
+                | SUBTOTAL DETAIL
+                |--------------------------------------------------------------------------
+                */
+
+                $itemSubtotal = $hargaFinal * $qty;
 
                 TransactionDetail::create([
                     'transaction_id' => $transaction->id,
@@ -202,16 +247,28 @@ class TransactionController extends Controller
                     'nama_barang'    => $product->nama_barang,
                     'harga'          => $hargaFinal,
                     'harga_beli'     => $product->harga_beli,
-                    'qty'            => $item['qty'],
+                    'qty'            => $qty,
                     'subtotal'       => $itemSubtotal
                 ]);
 
+                /*
+                |--------------------------------------------------------------------------
+                | UPDATE STOK
+                |--------------------------------------------------------------------------
+                */
+
                 $stokSebelum = $product->stok;
-                $stokSesudah = $stokSebelum - $item['qty'];
+                $stokSesudah = $stokSebelum - $qty;
 
                 $product->update([
                     'stok' => $stokSesudah
                 ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | STOCK MOVEMENT
+                |--------------------------------------------------------------------------
+                */
 
                 StockMovement::create([
                     'product_id'   => $product->id,
@@ -222,6 +279,16 @@ class TransactionController extends Controller
                     'reference_no' => $noNota
                 ]);
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | SIMPAN TOTAL DISKON GROSIR KE MASTER TRANSAKSI
+            |--------------------------------------------------------------------------
+            */
+
+            $transaction->update([
+                'diskon' => $totalDiskonGrosir
+            ]);
 
             DB::commit();
 
@@ -256,7 +323,8 @@ class TransactionController extends Controller
         if ($transaction->pelanggan) {
 
             $customer = Customer::where(
-                'kode_pelanggan',
+                // 'kode_pelanggan',
+                'id',
                 $transaction->pelanggan
             )->first();
 

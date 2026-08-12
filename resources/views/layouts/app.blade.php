@@ -16,10 +16,10 @@
     >
 
     <title>
-        @yield('title','POS Minimarket')
+        @yield('title','POS Toko')
     </title>
     <meta property="og:type" content="website">
-    <meta property="og:title" content="POS Minimarket">
+    <meta property="og:title" content="POS Toko">
     <meta property="og:description" content="Sistem Aplikasi Point of Sales & Manajemen Stok Handal.">
     <meta property="og:url" content="{{ url()->current() }}">
 

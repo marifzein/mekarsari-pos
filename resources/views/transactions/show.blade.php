@@ -58,7 +58,8 @@
                         @php
                             $customerData = null;
                             if ($transaction->pelanggan) {
-                                $customerData = \App\Models\Customer::where('kode_pelanggan', $transaction->pelanggan)->first();
+                                $customerData = \App\Models\Customer::where('id', $transaction->pelanggan)->first();
+                                // $customerData = \App\Models\Customer::where('kode_pelanggan', $transaction->pelanggan)->first();
                             }
                         @endphp
                         {{ $customerData ? $customerData->nama : ($transaction->pelanggan ?? 'Umum (Non-Member)') }}

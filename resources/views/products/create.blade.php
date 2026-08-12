@@ -171,7 +171,7 @@
         label="Supplier"
         name="supplier_id"
         icon="ri-truck-line"
-        required
+        
     >
         <option value="">-- Pilih Supplier --</option>
         @foreach($suppliers as $supplier)

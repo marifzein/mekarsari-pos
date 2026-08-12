@@ -24,17 +24,21 @@ class LaporanPenjualanPelangganController extends Controller
         if (!in_array($sortDir, ['asc', 'desc'])) $sortDir = 'desc';
 
         // 3. Query Base (Gunakan Alias agar select DB::raw bisa di-sorting dengan mudah)
-        $query = DB::table('transactions')
-            ->leftJoin('customers', 'transactions.pelanggan', '=', 'customers.kode_pelanggan')
+        $query = DB::table('transactions')  
+            // ->leftJoin('customers', 'transactions.pelanggan', '=', 'customers.kode_pelanggan')
+            ->leftJoin('customers', 'transactions.pelanggan', '=', 'customers.id')
             ->select(
                 'transactions.pelanggan as kode_pelanggan',
-                DB::raw('COALESCE(customers.nama, transactions.pelanggan, "Umum") as nama_pelanggan'),
+                DB::raw('COALESCE(customers.nama, "Umum") as nama_pelanggan'),
                 DB::raw('COUNT(transactions.id) as total_transaksi'),
                 DB::raw('SUM(transactions.grand_total) as total_belanja')
             )
             ->where('transactions.status', '!=', 'Batal') // 👈 Filter mengabaikan transaksi batal
             ->whereBetween(DB::raw('DATE(transactions.created_at)'), [$startDate, $endDate])
-            ->groupBy('transactions.pelanggan', 'customers.nama');
+            ->groupBy('transactions.pelanggan',
+                    'customers.kode_pelanggan',
+                    'customers.nama');
+            // ->groupBy('transactions.pelanggan', 'customers.nama');
 
         // 4. Hitung Total Akumulasi Keseluruhan (Grand Total) Lintas Halaman
         $totals = DB::table(DB::raw("({$query->toSql()}) as sub"))

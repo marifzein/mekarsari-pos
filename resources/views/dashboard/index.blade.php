@@ -15,9 +15,9 @@
                 Ringkasan aktivitas hari ini
             </p>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4 ">
+    <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4 ">
         
-        <x-stat-card
+        {{-- <x-stat-card
 
             title="Penjualan"
 
@@ -29,9 +29,23 @@
 
             subtitle="Hari ini"
 
+        /> --}}
+        <x-stat-card-white
+
+            title="Penjualan"
+            subtitle="Hari ini"
+
+            :value="'Rp '.number_format($todaySales,0,',','.')"
+
+            color="green"
+
+            icon="ri-money-dollar-circle-line"
+
+            
+
         />
 
-        <x-stat-card
+        {{-- <x-stat-card
 
             title="Transaksi"
 
@@ -42,6 +56,21 @@
             icon="ri-shopping-cart-2-line"
 
             subtitle="Hari ini"
+
+        /> --}}
+
+        <x-stat-card-white
+
+            title="Transaksi"
+            subtitle="Hari ini"
+
+            :value="'Rp '.number_format($todayTransactions,0,',','.')"
+
+            color="blue"
+
+            icon="ri-money-dollar-circle-line"
+
+            
 
         />
 
@@ -67,15 +96,31 @@
             </div>
         @else
             <!-- KONDISI NORMAL: Kembali ke komponen stat-card orange bawaan bos jika aman -->
-            <x-stat-card
+            {{-- <x-stat-card
                 title="Produk"
                 :value="number_format($totalProducts, 0, ',', '.')"
                 color="orange"
                 icon="ri-box-3-line"
                 subtitle="Total Produk"
+            /> --}}
+
+            <x-stat-card-white
+
+                title="Produk"
+                subtitle="Total Produk"
+
+                :value="number_format($totalProducts, 0, ',', '.')"
+
+                color="orange"
+
+                icon="ri-box-3-line"
+
+                
+
             />
+            
         @endif
-        <x-stat-card
+        {{-- <x-stat-card
 
             title="Stock"
 
@@ -87,9 +132,21 @@
 
             subtitle="Total Stock"
 
+        /> --}}
+        <x-stat-card-white
+
+            title="Stock"
+            subtitle="Total Stock"
+
+            :value="number_format($totalStock,0,',','.')"
+
+            color="purple"
+
+            icon="ri-archive-stack-line"
+
         />
 
-        <x-stat-card
+        {{-- <x-stat-card
 
             title="Stock Opname"
 
@@ -101,8 +158,20 @@
 
             subtitle="terakhir"
 
-        />
+        /> --}}
+        <x-stat-card-white
 
+            title="Stock Opname"
+            subtitle="Total Stock"
+
+            :value="$lastOpname?->opname_no ?? '-'"
+
+            color="indigo"
+
+            icon="ri-clipboard-line"
+
+        />
+        
         
     </div>
 
