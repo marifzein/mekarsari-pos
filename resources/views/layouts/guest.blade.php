@@ -38,7 +38,7 @@
                             </svg>
                         </div>
                         {{-- <span class="text-xl font-bold tracking-wider text-gray-800 uppercase">Flow<span class="text-emerald-500">POS</span></span> --}}
-                        <span class="text-xl font-bold tracking-wider text-gray-800 uppercase">Flow<span class="text-indigo-500">POS</span></span>
+                        <span class="text-xl font-bold tracking-wider text-gray-800 uppercase">Tata<span class="text-indigo-500">Kas</span></span>
                     </a>
                 </div>
 
