@@ -22,7 +22,6 @@ class ImportProducts extends Command
             ->get();
 
         $insert = 0;
-        $update = 0;
         $opening = 0;
 
         foreach ($rows as $row) {
@@ -36,8 +35,8 @@ class ImportProducts extends Command
                     'nama_barang'  => trim($row->nama_barang),
 
                     'category_id'  => $row->id_kategori_barang,
-                    'supplier_id'  => null,
-                    'brand_id'     => $row->id_merk_barang,
+                    'supplier_id'  => $row->id_merk_barang,
+                    'brand_id'     => null,
 
                     'catatan'      => $row->keterangan,
 

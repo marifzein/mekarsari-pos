@@ -137,9 +137,9 @@
 
     <td>Diskon</td>
 
-    <td align="right">
+    <td align="right">{{ number_format($transaction->diskon, 0, ',', '.') }}
 
-        0
+        
 
     </td>
 
@@ -210,6 +210,16 @@
 </tr>
 
 @endif
+
+
+@if(($transaction->hutang ?? 0) > 0)
+    <tr>
+        <td>Kasbon</td>
+        <td align="right">{{ number_format($transaction->hutang, 0, ',', '.') }}</td>
+    </tr>
+    @endif
+
+
 
 <tr>
 

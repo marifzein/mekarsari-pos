@@ -70,7 +70,7 @@ class AppServiceProvider extends ServiceProvider
             $footerData = Cache::remember('global_footer_data', 86400, function () {
                 return FooterSetting::first() ?? new FooterSetting([
                     'section_left' => 'DaCen : Fipman (Surabaya HQ)',
-                    'section_center' => 'Modul: Point of Sales v2.1',
+                    'section_center' => 'Modul: Point of Sales v1.1',
                     'section_right' => '© ' . date('Y') . ' POS Minimarket. Powered by Zezdev Style.'
                 ]);
             });

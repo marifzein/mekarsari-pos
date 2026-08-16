@@ -142,6 +142,25 @@
                     <span>Subtotal</span>
                     <span class="font-medium text-slate-800">Rp {{ number_format($transaction->subtotal,0,',','.') }}</span>
                 </div>
+
+                <!-- Tambahkan Diskon jika ada -->
+                @if(($transaction->diskon ?? 0) > 0)
+                <div class="flex justify-between text-red-600 font-medium">
+                    <span>Diskon / Potongan</span>
+                    <span>- Rp {{ number_format($transaction->diskon, 0, ',', '.') }}</span>
+                </div>
+                @endif
+                
+                <!-- Menampilkan Total Tagihan Bersih (Grand Total) -->
+                <div class="flex justify-between font-extrabold text-base text-slate-900 bg-slate-100 p-2 rounded-lg">
+                    <span>Total Tagihan</span>
+                    <span>Rp {{ number_format($transaction->grand_total ?? ($transaction->subtotal - $transaction->diskon), 0, ',', '.') }}</span>
+                </div>
+
+                <div class="flex justify-between text-slate-600">
+                    <span>Bayar</span>
+                    <span class="font-medium text-slate-800">Rp {{ number_format($transaction->cash,0,',','.') }}</span>
+                </div>
                 <div class="flex justify-between text-slate-600">
                     <span>Voucher</span>
                     <span class="font-medium text-slate-800">Rp {{ number_format($transaction->voucher,0,',','.') }}</span>
@@ -150,15 +169,18 @@
                     <span>Card</span>
                     <span class="font-medium text-slate-800">Rp {{ number_format($transaction->card,0,',','.') }}</span>
                 </div>
+
+                <!-- Kasbon / Hutang (Hanya tampil jika ada nominal hutang) -->
+                @if(($transaction->hutang ?? 0) > 0)
+                <div class="flex justify-between text-amber-700 font-semibold bg-amber-50 py-1 rounded">
+                    <span>Kasbon</span>
+                    <span>Rp {{ number_format($transaction->hutang, 0, ',', '.') }}</span>
+                </div>
+                @endif
+
                 <hr class="border-slate-200 my-2">
-                <div class="flex justify-between font-extrabold text-lg text-slate-900">
-                    <span>Total</span>
-                    <span>Rp {{ number_format($transaction->grand_total,0,',','.') }}</span>
-                </div>
-                <div class="flex justify-between text-slate-600">
-                    <span>Bayar</span>
-                    <span class="font-medium text-slate-800">Rp {{ number_format($transaction->cash,0,',','.') }}</span>
-                </div>
+                
+                
                 <div class="flex justify-between text-green-600 font-bold text-base">
                     <span>Kembalian</span>
                     <span>Rp {{ number_format($transaction->kembalian,0,',','.') }}</span>

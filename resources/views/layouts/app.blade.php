@@ -211,14 +211,14 @@ aside::-webkit-scrollbar-track{
                 {{-- Section Kiri: Status / Cabang --}}
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-                    <span>DaCen: <strong class="text-slate-700">{{ $footerData->section_left }}</strong></span>
+                    <span><strong class="text-slate-700">{{ $footerData->section_left }}</strong></span>
                 </div>
 
                 {{-- Section Tengah: Info Shortcut / Kasir Aktif --}}
                 <div class="hidden md:flex items-center gap-4 text-slate-400">
                     <span>Kasir: <strong class="text-slate-600">{{ Auth::user()->name }}</strong></span>
                     <span>•</span>
-                    <span>Modul: <strong class="text-indigo-600">{{ $footerData->section_center }}</strong></span>
+                    <span> App : <strong class="text-indigo-600">{{ $footerData->section_center }}</strong></span>
                 </div>
 
                 {{-- Section Kanan: Hak Cipta / Lisensi --}}

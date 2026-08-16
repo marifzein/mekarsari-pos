@@ -470,12 +470,12 @@
         {{-- =========================================================================== --}}
                             {{-- REFACTOR PEMBAYARAN >>>>>>>>     --}}
 
-                            <div class="bg-white rounded-xl  p-5 space-y-5">
+                            <div class="bg-white rounded-xl  p-2 space-y-2">
                                 {{-- shadow border --}}
 
-                                <h3 class="text-lg font-semibold">
+                                <h3 class="text-lg font-semibold border-b pb-2">
 
-                                    Pembayaran
+                                    PEMBAYARAN
 
                                 </h3>
 
@@ -499,14 +499,31 @@
                                     ></span>
 
                                 </div>
-
                                 
+
+                                <!-- 2. INPUT DISKON / POTONGAN -->
+                                <div class="flex justify-between items-center my-1">
+                                    <label class="block mb-1 font-medium text-slate-700">Diskon / Potongan</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        x-model.number="diskon"
+                                        @input="if(diskon < 0) diskon = 0; recalculate();"
+                                        class="text-right rounded-xl border border-slate-300 hover:border-slate-400 w-40 bg-white px-3 py-1 text-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
+                                    >
+                                </div>
 
                                 <hr>
+                                <!-- 3. GRAND TOTAL / TOTAL TAGIHAN BERSIH -->
+                                <div class="flex justify-between items-center bg-slate-50 p-2 rounded-lg border">
+                                    <span class="font-bold text-slate-800">TOTAL</span>
+                                    <span class="font-extrabold text-xl text-indigo-600" x-text="formatRupiah(grandTotal)"></span>
+                                </div>
 
-                                
-                                
-                                <div class="flex justify-between items-center mb-3">
+
+                                <hr class="my-2">
+
+                                <div class="flex justify-between items-center my-1">
 
                                     <label
                                         class="block mb-1 font-medium"
@@ -570,7 +587,7 @@
                                 {{-- VOUCHER --}}
                                 {{-- ======================= --}}
 
-                                <div class="flex justify-between items-center mb-3">
+                                <div class="flex justify-between items-center my-1">
 
                                     <label
                                         class="block mb-1 font-medium"
@@ -637,7 +654,7 @@
                                 {{-- CARD --}}
                                 {{-- ======================= --}}
 
-                                <div class="flex justify-between items-center mb-3">
+                                <div class="flex justify-between items-center my-1">
 
                                     <label
                                         class="block mb-1 font-medium"
@@ -706,7 +723,23 @@
                                 </div>
 
 
-                                <hr>
+
+                                <!-- HUTANG / KASBON -->
+                                <div class="flex justify-between items-center ">
+                                     {{-- class="block mb-1 font-medium" --}}
+                                    <label class="block  font-medium text-amber-700">Hutang / Kasbon</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        x-model.number="hutang"
+                                        {{-- @input="if(hutang<0) hutang=0; recalculate();" --}}
+                                        @input=" recalculate();"
+                                        class="text-right rounded-lg border border-amber-300 hover:border-amber-400 w-40 bg-amber-50/50 py-1 px-3 text-amber-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none transition-all font-semibold"
+                                    >
+                                </div>
+
+
+                                <hr class="my-1">
 
                                 {{-- ======================= --}}
                                 {{-- KURANG BAYAR --}}
@@ -1055,13 +1088,14 @@ function posKasir() {
         cart: [],
 
         cash: 0,
-        //cash: '',
-
+        
         voucher: 0,
         
         card: 0,
 
         diskon: 0,
+
+        hutang: 0,
 
         // paymentTotal:0,
 
@@ -1236,7 +1270,8 @@ function posKasir() {
 
         get grandTotal()
         {
-            return this.subtotal - this.diskon;
+            // return this.subtotal - this.diskon;
+            return Math.max(0, this.subtotal - Number(this.diskon || 0));
         },
 
         // ESC utk close price checker
@@ -1423,43 +1458,6 @@ function posKasir() {
             }
         },
         
-        // get subtotal()
-        // {
-        //     return this.cart.reduce(
-        //         (total,item) =>
-        //             total + (item.qty * item.harga),
-        //         0
-        //     );
-
-            
-        // },
-
-        // get paymentTotal()
-        // {
-        //     return (
-        //         Number(this.cash || 0) +
-        //         Number(this.voucher || 0) +
-        //         Number(this.card || 0)
-        //     );
-        // },
-
-        // get kurangBayar()
-        // {
-        //     return Math.max(
-        //         0,
-        //         this.subtotal - this.paymentTotal
-        //     );
-        // },
-
-        // get kembalian()
-        // {
-        //     return Math.max(
-        //         0,
-        //         this.paymentTotal - this.subtotal
-        //     );
-            
-        // },
-
         subtotal: 0,
 
         paymentTotal: 0,
@@ -1471,24 +1469,48 @@ function posKasir() {
         recalculate()
         {
             this.subtotal = this.cart.reduce(
-                // (total, item) => total + (item.qty * item.harga),
-                // 0
+                
                 (total, item) => total + (Number(item.qty) * Number(item.harga)),
                     0
             );
 
-            // Amankan kalkulasi dari input kosong
+            let nilaiDiskon = Number(this.diskon || 0);
+            let totalTagihan = Math.max(0, this.subtotal - nilaiDiskon);
+
+            // 2. Ambil nilai pembayaran riil (non-hutang)
             let nilaiCash = Number(this.cash || 0);
             let nilaiVoucher = Number(this.voucher || 0);
             let nilaiCard = Number(this.card || 0);
+            let totalBayarRiil = nilaiCash + nilaiVoucher + nilaiCard;
             
-            this.paymentTotal =
-                Number(this.cash || 0) +
-                Number(this.voucher || 0) +
-                Number(this.card || 0);
+            // 3. Hitung Maksimal Hutang yang Diizinkan
+            // (Hanya sisa tagihan yang belum tercover pembayaran riil)
+            let sisaTagihan = Math.max(0, this.grandTotal - totalBayarRiil);
+            
+            let nilaiHutang = Number(this.hutang || 0);   
+            
+            // VALIDASI 1: Jika pembayaran riil sudah melunasi/melebihi tagihan, hutang harus 0
+            if (totalBayarRiil >= this.grandTotal) {
+                nilaiHutang = 0;
+                this.hutang = 0;
+            } 
+            // VALIDASI 2: Jika hutang diinput lebih besar dari sisa tagihan, pangkas sesuai sisa tagihan
+            else if (nilaiHutang > sisaTagihan) {
+                nilaiHutang = sisaTagihan;
+                this.hutang = sisaTagihan;
+            }
 
-            this.kurangBayar = Math.max(0, this.subtotal - this.paymentTotal);
-            this.kembalian   = Math.max(0, this.paymentTotal - this.subtotal);
+           // Total semua metode pembayaran
+            this.paymentTotal = totalBayarRiil + nilaiHutang;
+
+            // 4. Hitung Kurang Bayar & Kembalian
+            this.kurangBayar = Math.max(0, this.grandTotal - this.paymentTotal);
+
+            // Kembalian HANYA dihitung dari kelebihan Pembayaran Riil terhadap tagihan bersih
+            this.kembalian = Math.max(0, totalBayarRiil - this.grandTotal);
+
+
+            
         },
 
         removeItem(id)
@@ -1634,6 +1656,7 @@ function posKasir() {
                     this.voucher = 0;
                     this.card = 0;
                     this.kembalian=0;
+                    this.hutang = 0; // 👈 Reset hutang saat cart dikosongkan
                 });
 
                 this.$refs.barcodeInput.focus();
@@ -1654,10 +1677,7 @@ function posKasir() {
                     confirmButtonText: 'OK',
                     returnFocus: false
                 });
-                //  this.$nextTick(() => {
-                //         this.$refs.barcodeInput.focus();
-                //         this.$refs.barcodeInput.select();
-                //     });
+                
 
                 setTimeout(() => {
 
@@ -1685,7 +1705,21 @@ function posKasir() {
                 return;
             }
 
-            if(this.paymentTotal < this.subtotal)
+            // ⚠️ PROTEKSI BUG: Jika ada hutang, wajib pilih pelanggan terlebih dahulu!
+            if (Number(this.hutang || 0) > 0 && !this.selectedCustomer) {
+                await Swal.fire({
+                    icon: 'warning',
+                    title: 'Pelanggan Wajib Dipilih',
+                    text: 'Transaksi mengandung hutang/kasbon. Silakan pilih pelanggan terlebih dahulu!',
+                    confirmButtonText: 'OK',
+                    returnFocus: false
+                });
+                this.$refs.customerInput?.focus();
+                return;
+            }
+
+            // Validasi Kurang Bayar saat simpan
+            if(this.paymentTotal < this.grandTotal)
             {
                 
                 await Swal.fire({
@@ -1760,8 +1794,11 @@ function posKasir() {
 
                             // Validasi & Proteksi level JS: Jika kosong/null, paksa jadi 0
                             subtotal: Number(this.subtotal || 0),
+                            diskon: Number(this.diskon || 0), // Send diskon
+                            grand_total: Number(this.grandTotal || 0), // Sub total yang sudah dipotong diskon
                             voucher: Number(this.voucher || 0),
                             card: Number(this.card || 0),
+                            hutang: Number(this.hutang || 0), // 👈 Kirim parameter hutang ke backend
                             grand_total: Number(this.subtotal || 0),
                             cash: Number(this.cash || 0),
                             kembalian: Number(this.kembalian || 0)

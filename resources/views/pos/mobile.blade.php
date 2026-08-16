@@ -164,32 +164,65 @@
                 <i class="ri-bank-card-2-line text-indigo-500 text-sm"></i> Jenis Pembayaran
             </h3>
 
-            <!-- Cash -->
-            <div class="flex justify-between items-center gap-2">
-                <label for="cash" class="text-sm font-bold text-slate-700">Cash (F4)</label>
+            <!-- Ringkasan Tagihan (Subtotal, Diskon, Total) -->
+            <div class="space-y-2 pb-3 border-b border-slate-100 text-sm">
+                <div class="flex justify-between items-center text-slate-600">
+                    <span class="font-medium">Subtotal</span>
+                    <span class="font-bold text-slate-800" x-text="'Rp ' + formatRupiah(subtotal)"></span>
+                </div>
+
+                <div class="flex justify-between items-center gap-2">
+                    <label class="font-medium text-slate-600">Diskon / Potongan</label>
+                    <div class="relative w-36">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-2 text-slate-400 text-xs font-bold">Rp</span>
+                        <input type="number" min="0" x-model.number="diskon" @input="recalculate()" class="text-right w-full bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-indigo-500 rounded-lg pl-6 pr-2.5 py-1 text-sm font-bold text-slate-800">
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center pt-2 border-t border-dashed border-slate-200 font-extrabold text-base text-indigo-950">
+                    <span>TOTAL</span>
+                    <span class="text-indigo-600" x-text="'Rp ' + formatRupiah(grandTotal)"></span>
+                </div>
+            </div>
+            
+            <!-- Input Metode Bayar -->
+            <div class="space-y-2.5">
+                <!-- Cash -->
+                <div class="flex justify-between items-center gap-2">
+                    <label for="cash" class="text-sm font-bold text-slate-700">Cash (F4)</label>
+                    <div class="relative w-44">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 text-slate-400 text-xs font-bold">Rp</span>
+                        <input id="cash" type="number" min="0" x-model.number="cash" @input="recalculate()" class="text-right w-full bg-slate-50 border-0 focus:ring-2 focus:ring-indigo-500 rounded-xl pl-7 pr-3 py-2 text-sm font-bold text-slate-800">
+                    </div>
+                </div>
+
+                <!-- Voucher -->
+                <div class="flex justify-between items-center gap-2">
+                    <label class="text-sm font-bold text-slate-700">Voucher</label>
+                    <div class="relative w-44">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 text-slate-400 text-xs font-bold">Rp</span>
+                        <input type="number" min="0" x-model.number="voucher" @input="if(voucher<0) voucher=0; recalculate();" class="text-right w-full bg-slate-50 border-0 focus:ring-2 focus:ring-indigo-500 rounded-xl pl-7 pr-3 py-2 text-sm font-bold text-slate-800">
+                    </div>
+                </div>
+
+                <!-- Card -->
+                <div class="flex justify-between items-center gap-2">
+                    <label class="text-sm font-bold text-slate-700">Card</label>
+                    <div class="relative w-44">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 text-slate-400 text-xs font-bold">Rp</span>
+                        <input type="number" min="0" x-model.number="card" @input="recalculate();" class="text-right w-full bg-slate-50 border-0 focus:ring-2 focus:ring-indigo-500 rounded-xl pl-7 pr-3 py-2 text-sm font-bold text-slate-800">
+                    </div>
+                </div>
+
+            <!-- Hutang / Kasbon -->
+            <div class="flex justify-between items-center gap-2 pt-1 border-t border-slate-100">
+                <label class="text-sm font-bold text-amber-800">Hutang / Kasbon</label>
                 <div class="relative w-44">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 text-slate-400 text-xs font-bold">Rp</span>
-                    <input id="cash" type="number" min="0" x-model.number="cash" @input="recalculate()" class="text-right w-full bg-slate-50 border-0 focus:ring-2 focus:ring-indigo-500 rounded-xl pl-7 pr-3 py-2 text-sm font-bold text-slate-800">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 text-amber-500 text-xs font-bold">Rp</span>
+                    <input type="number" min="0" x-model.number="hutang" @input="recalculate();" class="text-right w-full bg-amber-50/60 border border-amber-200 focus:ring-2 focus:ring-amber-400 rounded-xl pl-7 pr-3 py-2 text-sm font-bold text-amber-900">
                 </div>
             </div>
 
-            <!-- Voucher -->
-            <div class="flex justify-between items-center gap-2">
-                <label class="text-sm font-bold text-slate-700">Voucher</label>
-                <div class="relative w-44">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 text-slate-400 text-xs font-bold">Rp</span>
-                    <input type="number" min="0" x-model.number="voucher" @input="if(voucher<0) voucher=0; recalculate();" class="text-right w-full bg-slate-50 border-0 focus:ring-2 focus:ring-indigo-500 rounded-xl pl-7 pr-3 py-2 text-sm font-bold text-slate-800">
-                </div>
-            </div>
-
-            <!-- Card -->
-            <div class="flex justify-between items-center gap-2">
-                <label class="text-sm font-bold text-slate-700">Card</label>
-                <div class="relative w-44">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 text-slate-400 text-xs font-bold">Rp</span>
-                    <input type="number" min="0" x-model.number="card" @input="recalculate();" class="text-right w-full bg-slate-50 border-0 focus:ring-2 focus:ring-indigo-500 rounded-xl pl-7 pr-3 py-2 text-sm font-bold text-slate-800">
-                </div>
-            </div>
         </div>
 
     </div>
@@ -200,29 +233,40 @@
     <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-2xl p-4 z-40 rounded-t-2xl">
         <div class="max-w-md mx-auto space-y-2">
             
-            <!-- Rincian Tagihan & Kembalian Terpampang Jelas -->
+            <!-- Rincian Tagihan & Kembalian  -->
             <div class="bg-slate-50 rounded-xl p-2.5 border border-slate-100 flex items-center justify-between">
                 <div>
                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Total Tagihan</span>
-                    <span class="text-xl font-black text-slate-900 tracking-tight block truncate" x-text="'Rp ' + formatRupiah(subtotal)"></span>
+                    <span class="text-xl font-black text-slate-900 tracking-tight block truncate" x-text="'Rp ' + formatRupiah(grandTotal)"></span>
                 </div>
 
                 <div class="text-right">
-                    <template x-if="kembalian > 0">
+                    <template x-if="kurangBayar > 0">
+                        <div>
+                            <span class="text-[10px] font-bold text-red-500 uppercase tracking-wide block">Kurang Bayar</span>
+                            <span class="text-lg font-black text-red-500 block truncate" x-text="'Rp ' + formatRupiah(kurangBayar)"></span>
+                        </div>
+                    </template>
+
+                    <template x-if="kurangBayar === 0">
+                        <div class="w-full flex justify-between items-center text-green-600">
+                            <span class="text-xs font-bold uppercase tracking-wide">Kembalian </span>
+                            <span class="text-lg font-black" x-text="'Rp ' + formatRupiah(kembalian)"></span>
+                        </div>
+                    </template>
+
+
+                    {{-- <template x-if="kembalian > 0">
                         <div>
                             <span class="text-[10px] font-bold text-green-600 uppercase tracking-wide block">Kembalian</span>
                             <span class="text-lg font-black text-green-600 block truncate" x-text="'Rp ' + formatRupiah(kembalian)"></span>
                         </div>
-                    </template>
-                    <template x-if="kurangBayar > 0">
-                        <div>
-                            <span class="text-[10px] font-bold text-red-500 uppercase tracking-wide block">Kurang</span>
-                            <span class="text-lg font-black text-red-500 block truncate" x-text="'Rp ' + formatRupiah(kurangBayar)"></span>
-                        </div>
-                    </template>
-                    <template x-if="kembalian === 0 && kurangBayar === 0">
-                        <span class="text-xs font-bold text-slate-400 block">Lunas</span>
-                    </template>
+                    </template> --}}
+                    
+                    {{-- <template x-if="kembalian === 0 && kurangBayar === 0">
+                        <span class="text-xs font-bold text-slate-400 block"></span>
+                    </template> --}}
+                    
                 </div>
             </div>
 
@@ -348,9 +392,12 @@ function posKasir() {
         search: '',
         products: [],
         cart: [],
+        subtotal: 0,
+        grandTotal: 0,
         cash: 0,
         voucher: 0,
         card: 0,
+        hutang: 0,
         diskon: 0,
         subtotal: 0,
         kurangBayar: 0,
@@ -437,9 +484,50 @@ function posKasir() {
         
         recalculate() {
             this.subtotal = this.cart.reduce((total, item) => total + (Number(item.qty) * Number(item.harga)), 0);
-            let paymentTotal = Number(this.cash || 0) + Number(this.voucher || 0) + Number(this.card || 0);
-            this.kurangBayar = Math.max(0, this.subtotal - paymentTotal);
-            this.kembalian   = Math.max(0, paymentTotal - this.subtotal);
+
+            // 2. Hitung Grand Total (Subtotal - Diskon)
+            let nilaiDiskon = Number(this.diskon || 0);
+            this.grandTotal = Math.max(0, this.subtotal - nilaiDiskon);
+
+            let nilaiCash    = Number(this.cash || 0);
+            let nilaiVoucher = Number(this.voucher || 0);
+            let nilaiCard    = Number(this.card || 0);
+            let totalBayarRiil = nilaiCash + nilaiVoucher + nilaiCard;
+
+
+            // 4. Validasi Hutang (Maximal = sisa tagihan)
+            let sisaTagihan = Math.max(0, this.grandTotal - totalBayarRiil);
+            let nilaiHutang = Number(this.hutang || 0);
+
+            if (totalBayarRiil >= this.grandTotal) {
+                this.hutang = 0;
+                nilaiHutang = 0;
+            } else if (nilaiHutang > sisaTagihan) {
+                this.hutang = sisaTagihan;
+                nilaiHutang = sisaTagihan;
+            }
+            
+
+
+            // 5. Kurang Bayar & Kembalian
+            let totalBayarGabungan = totalBayarRiil + nilaiHutang;
+            this.kurangBayar = Math.max(0, this.grandTotal - totalBayarGabungan);
+            this.kembalian = Math.max(0, totalBayarRiil - this.grandTotal);
+
+    
+            // Total Pembayaran Gabungan
+            // let paymentTotal = nilaiCash + nilaiVoucher + nilaiCard + nilaiHutang;
+
+            // Kurang Bayar
+            // this.kurangBayar = Math.max(0, this.subtotal - paymentTotal);
+
+            // Kembalian (Hanya dihitung dari kelebihan uang fisik terhadap sisa tagihan non-hutang)
+            // let sisaHarusDibayar = Math.max(0, this.subtotal - nilaiHutang);
+            // let totalUangDiterima = nilaiCash + nilaiVoucher + nilaiCard;
+
+            // this.kembalian = Math.max(0, totalUangDiterima - sisaHarusDibayar);
+
+
         },
         
         // Poin 3: Otomatis fokus ke input barcode setelah delete item
@@ -522,13 +610,48 @@ function posKasir() {
         
         async clearCart() {
             const result = await Swal.fire({ text: 'Kosongkan keranjang?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya', cancelButtonText: 'Batal', returnFocus: false });
-            if(result.isConfirmed) { this.cart = []; this.cash = 0; this.voucher = 0; this.card = 0; this.recalculate(); this.$refs.barcodeInput?.focus(); }
+            if(result.isConfirmed) { 
+                this.cart = []; 
+                this.cash = 0; 
+                this.voucher = 0; 
+                this.card = 0;
+                this.hutang = 0; 
+                this.recalculate(); 
+                this.$refs.barcodeInput?.focus(); 
+            }
         },  
         
         async saveTransaction() {
-            let paymentTotal = Number(this.cash || 0) + Number(this.voucher || 0) + Number(this.card || 0);
-            if(this.cart.length === 0) { Swal.fire({ icon: 'warning', text: 'Keranjang kosong!', returnFocus: false }); return; }
-            if(paymentTotal < this.subtotal) { Swal.fire({ icon: 'warning', text: 'Pembayaran kurang!', returnFocus: false }); return; }
+            
+            this.recalculate();
+
+            let nilaiCash = Number(this.cash || 0);
+            let nilaiVoucher = Number(this.voucher || 0);
+            let nilaiCard = Number(this.card || 0);
+            let nilaiHutang = Number(this.hutang || 0);
+
+            let paymentTotal = Number(this.cash || 0) + Number(this.voucher || 0) + Number(this.card || 0) + nilaiHutang;;
+
+
+            if(this.cart.length === 0) { 
+                Swal.fire({ icon: 'warning', text: 'Keranjang kosong!', returnFocus: false }); return; 
+            }
+
+            // Validasi: Pelanggan Wajib diisi jika menggunakan Hutang / Kasbon
+            if(nilaiHutang > 0 && !this.selectedCustomer) {
+                Swal.fire({ 
+                    icon: 'warning', 
+                    title: 'Pelanggan Wajib Diisi', 
+                    text: 'Transaksi hutang/kasbon memerlukan data pelanggan!', 
+                    returnFocus: false 
+                });
+                return;
+            }
+
+            if(paymentTotal < this.grandTotal) { 
+                Swal.fire({ icon: 'warning', text: 'Pembayaran kurang!', returnFocus: false }); 
+                return; 
+            }
             
             const konfirmasi = await Swal.fire({ text: 'Simpan transaksi?', icon: 'question', showCancelButton: true, confirmButtonText: 'Ya', returnFocus: false });
             if (!konfirmasi.isConfirmed) return;
@@ -538,7 +661,15 @@ function posKasir() {
                 headers:{ 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }, 
                 body:JSON.stringify({ 
                     pelanggan: this.selectedCustomer ? this.selectedCustomer.kode_pelanggan : null, 
-                    cart:this.cart, subtotal: this.subtotal, voucher: this.voucher, card: this.card, grand_total: this.subtotal, cash: this.cash, kembalian: this.kembalian 
+                    cart:this.cart, 
+                    subtotal: this.subtotal,
+                    diskon: this.diskon, 
+                    voucher: this.voucher, 
+                    card: this.card,
+                    hutang: this.hutang, 
+                    grand_total: this.subtotal, 
+                    cash: this.cash, 
+                    kembalian: this.kembalian 
                 }) 
             });
             let result = await response.json();

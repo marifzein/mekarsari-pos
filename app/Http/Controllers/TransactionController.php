@@ -28,27 +28,26 @@ class TransactionController extends Controller
     }
 
     // load page
-    public function index()
+    public function index(Request $request)
     {
-        // $transactions =
-        //     Transaction::latest()
-        //     ->paginate(20);
-
-        // return view(
-        //     'transactions.index',
-        //     compact('transactions')
-        // );
-
+       
         // 1. Inisialisasi query transaksi dengan eager load relasi user (kasir)
         $query = Transaction::with(['user', 'customerRelation'])->latest();
+
+        // 🔍 2. Filter Pencarian berdasarkan Nomor Nota
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where('no_nota', 'like', "%{$search}%");
+        }
 
         // 🔑 2. Proteksi Multi-Role: Jika yang login adalah Kasir, batasi hanya transaksinya sendiri
         if (strtolower(Auth::user()->role) === 'kasir') {
             $query->where('user_id', Auth::id());
         }
 
-        // 3. Eksekusi paginasinya
-        $transactions = $query->paginate(20);
+        /// 4. Eksekusi pagination dan simpan query string ke link pagination
+        $transactions = $query->paginate(20)->appends($request->all());
+        // $transactions = $query->paginate(20);
 
         return view(
             'transactions.index',
@@ -79,23 +78,21 @@ class TransactionController extends Controller
 
         }
         
-        $subtotal =
-            (float) $request->subtotal;
+        $subtotal   = (float) $request->subtotal;
+        
+        $diskon     = (float) $request->diskon;
+        
+        $grandTotal = max(0, $subtotal - $diskon);
 
-        $voucher =
-            (float) $request->voucher;
+        $cash       = (float) $request->cash;
 
-        $card =
-            (float) $request->card;
+        $voucher    =  (float) $request->voucher;
 
-        $grandTotal =
-            (float) $request->grand_total;
+        $card       = (float) $request->card;
 
-        $cash =
-            (float) $request->cash;
+        $hutang     = (float) $request->hutang;
 
-        $paymentTotal =
-            $cash + $card + $voucher;
+        $paymentTotal = $cash + $card + $voucher + $hutang ;
 
         if ($paymentTotal < $grandTotal)
         {
@@ -119,6 +116,13 @@ class TransactionController extends Controller
             ], 403);
         }
 
+        // 🔒 Safe Check: Jika hutang ada nilainya tapi pelanggan kosong
+        if ($hutang > 0 && !$request->pelanggan) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pelanggan wajib diisi jika transaksi menggunakan Hutang/Kasbon!'
+            ], 422);
+        }
 
         DB::beginTransaction();
 
@@ -154,23 +158,22 @@ class TransactionController extends Controller
 
                 'shift_id'     => $activeShift->id, // 🔥 shift_id aman tersimpan
                 
-                'pelanggan' => $request->pelanggan,
+                // 'pelanggan' => $request->pelanggan,
+                'pelanggan'     => $customer?->id,
 
-                'telp' => $customer?->telepon,
+                'telp'          => $customer?->telepon,
 
-                'subtotal'     => $request->subtotal,
+                'subtotal'     => $subtotal,
 
-                 // Akan di-update setelah semua item selesai
-                'diskon'       => 0,
+                 // diskon
+                'diskon'       => $diskon, // Diskon nota
 
-                'voucher'      => $request->voucher,
+                'grand_total'  => $grandTotal,
 
-                'card'         => $request->card,
-
-                'grand_total'  => $request->grand_total,
-
-                'cash'         => $request->cash,   
-
+                'voucher'      => $voucher,
+                'card'         => $card,
+                'hutang'       => $hutang,
+                'cash'         => $cash,
                 'kembalian'    => $request->kembalian,
             ]);
 
@@ -285,10 +288,11 @@ class TransactionController extends Controller
             | SIMPAN TOTAL DISKON GROSIR KE MASTER TRANSAKSI
             |--------------------------------------------------------------------------
             */
-
-            $transaction->update([
-                'diskon' => $totalDiskonGrosir
-            ]);
+            // tadinya diskon berisi potongan grosir,skrg diskon itu diinput manual
+            // diskon item lgsg dihitung ke harga jual jadi subtotal sudah terkena pot grosir
+            // $transaction->update([
+            //     'diskon' => $totalDiskonGrosir
+            // ]);
 
             DB::commit();
 

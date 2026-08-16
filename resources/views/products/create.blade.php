@@ -212,6 +212,7 @@
         <option value="box">Box</option>
         <option value="dus">Dus</option>
         <option value="lusin">Lusin</option>
+        <option value="bal" >Bal</option>
 
     </x-select>
 

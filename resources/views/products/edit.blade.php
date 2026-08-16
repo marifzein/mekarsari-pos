@@ -311,13 +311,20 @@
         required
     />
 
-    <x-input
-        label="Satuan"
-        name="satuan"
-        icon="ri-ruler-line"
-        :value="$product->satuan"
-        required
-    />
+    <x-select
+    label="Satuan"
+    name="satuan"
+    icon="ri-ruler-line"
+    required
+>
+    <option value="">-- Pilih Satuan --</option>
+    <option value="pcs" @selected(old('satuan', $product->satuan) == 'pcs')>PCS</option>
+    <option value="pack" @selected(old('satuan', $product->satuan) == 'pack')>Pack</option>
+    <option value="box" @selected(old('satuan', $product->satuan) == 'box')>Box</option>
+    <option value="dus" @selected(old('satuan', $product->satuan) == 'dus')>Dus</option>
+    <option value="lusin" @selected(old('satuan', $product->satuan) == 'lusin')>Lusin</option>
+    <option value="bal" @selected(old('satuan', $product->satuan) == 'bal')>Bal</option>
+</x-select>
 
     <x-input
         label="Stok Saat Ini"

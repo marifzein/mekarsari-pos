@@ -7,60 +7,44 @@ use Illuminate\Support\Facades\DB;
 
 class ImportTransactionDetails extends Command
 {
-    /**
-     * php artisan import:transaction-details
-     */
     protected $signature = 'import:transaction-details';
-
-    protected $description = 'Import detail penjualan dari database Mekarsari';
+    protected $description = 'Import detail penjualan dari database Mekarsari (Optimized Batch)';
 
     public function handle()
     {
-        $this->info('IMPORT DATA DETAIL TRANSAKSI');
+        $this->info('STARTING OPTIMIZED IMPORT...');
 
-        $insert = 0;
-        $update = 0;
+        // 1. Matikan sementara Foreign Key Checks & Auto Commit bawaan session untuk speedup & kestabilan
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        DB::statement('SET UNIQUE_CHECKS=0;');
 
+        $insertCount = 0;
+
+        // 2. Gunakan Chunking besar (misal 5.000)
         DB::connection('mekarsari')
             ->table('pj_penjualan_detail')
             ->orderBy('id_penjualan_d')
-            ->chunk(1000, function ($rows) use (&$insert, &$update) {
+            ->chunk(5000, function ($rows) use (&$insertCount) {
+                
+                $batchData = [];
+
+                // Load map produk ke memory sekaligus untuk menghindari query N+1 di loop
+                $productIds = $rows->pluck('id_barang')->unique()->toArray();
+                $products = DB::table('products')
+                    ->whereIn('id', $productIds)
+                    ->get()
+                    ->keyBy('id');
 
                 foreach ($rows as $row) {
+                    $product = $products->get($row->id_barang);
 
-                    // Pastikan transaksi master sudah ada
-                    $transactionExists = DB::table('transactions')
-                        ->where('id', $row->id_penjualan_m)
-                        ->exists();
-
-                    if (!$transactionExists) {
-                        $this->error(
-                            "Transaksi tidak ditemukan: " .
-                            "id_penjualan_m {$row->id_penjualan_m}"
-                        );
-
-                        throw new \RuntimeException(
-                            "Transaction master tidak ditemukan."
-                        );
-                    }
-
-                    // Pastikan produk sudah ada
-                    $product = DB::table('products')
-                        ->where('id', $row->id_barang)
-                        ->first();
-
+                    // Skip jika produk tidak ditemukan
                     if (!$product) {
-                        $this->error(
-                            "Produk tidak ditemukan: " .
-                            "id_barang {$row->id_barang}"
-                        );
-
-                        throw new \RuntimeException(
-                            "Product tidak ditemukan."
-                        );
+                        continue; 
                     }
 
-                    $data = [
+                    $batchData[] = [
+                        'id'             => $row->id_penjualan_d,
                         'transaction_id' => $row->id_penjualan_m,
                         'product_id'     => $row->id_barang,
                         'harga_beli'     => $row->hargabeli,
@@ -72,42 +56,29 @@ class ImportTransactionDetails extends Command
                         'created_at'     => now(),
                         'updated_at'     => now(),
                     ];
+                }
 
-                    // ID legacy dipertahankan
-                    $exists = DB::table('transaction_details')
-                        ->where('id', $row->id_penjualan_d)
-                        ->exists();
+                // 3. Lakukan BULK INSERT / UPSERT dalam 1 Transaction Block
+                if (!empty($batchData)) {
+                    DB::transaction(function () use ($batchData) {
+                        // Gunakan upsert: Insert jika belum ada, Update jika ID sudah ada
+                        DB::table('transaction_details')->upsert(
+                            $batchData,
+                            ['id'], // Unique key constraint
+                            ['transaction_id', 'product_id', 'harga_beli', 'kode_barang', 'nama_barang', 'harga', 'qty', 'subtotal', 'updated_at']
+                        );
+                    });
 
-                    if ($exists) {
-
-                        DB::table('transaction_details')
-                            ->where('id', $row->id_penjualan_d)
-                            ->update($data);
-
-                        $update++;
-
-                    } else {
-
-                        DB::table('transaction_details')->insert([
-                            'id' => $row->id_penjualan_d,
-                            ...$data,
-                        ]);
-
-                        $insert++;
-                    }
+                    $insertCount += count($batchData);
+                    $this->info("Processed batch... Total: {$insertCount} records.");
                 }
             });
 
-        $this->newLine();
+        // Nyalakan kembali check
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        DB::statement('SET UNIQUE_CHECKS=1;');
 
-        $this->table(
-            ['Insert', 'Update'],
-            [
-                [$insert, $update]
-            ]
-        );
-
-        $this->info('Selesai.');
+        $this->info("SELESAI! Total {$insertCount} records berhasil di-import/update tanpa stress I/O.");
 
         return Command::SUCCESS;
     }

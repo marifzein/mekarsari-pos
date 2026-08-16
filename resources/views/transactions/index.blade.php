@@ -19,11 +19,33 @@
         </h1>
     </div>
 
-    {{-- <div class="max-w-7xl mx-auto p-0 md:p-6"> --}}
+        <!-- 🔍 FORM FILTER SEARCH NO NOTA -->
+        <form method="GET" action="{{ route('transactions.index') }}" class="flex items-center gap-2 w-full md:w-auto">
+            <div class="relative w-full md:w-80">
+                <input 
+                    type="text" 
+                    name="search" 
+                    value="{{ request('search') }}" 
+                    placeholder="Cari No. Nota..." 
+                    class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <i class="ri-search-line"></i>
+                </div>
+            </div>
 
-        
+            <x-button color="blue" type="submit" class="px-4 py-2 text-sm font-semibold">
+                Cari
+            </x-button>
 
-        {{-- <div class="bg-white rounded-xl shadow overflow-x-auto">     --}}
+            @if(request()->filled('search'))
+                <a href="{{ route('transactions.index') }}" class="px-3 py-2 bg-slate-200 text-slate-700 hover:bg-slate-300 rounded-lg text-sm font-medium transition">
+                    Reset
+                </a>
+            @endif
+        </form>
+
+
     {{-- TAMPILAN DESKTOP (TABEL) --}}
     <div class="hidden md:block bg-white rounded-xl shadow overflow-hidden">
             <table class="w-full">

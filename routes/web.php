@@ -80,7 +80,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/api/customers', [CustomerController::class, 'storeApi']);
         
         // Transaksi & Print
-        Route::get('/transactions', [TransactionController::class, 'index']);
+        Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');;
         Route::get('/transactions/{id}', [TransactionController::class, 'show'])->name('transactions.show');
         Route::get('/transactions/{id}/print', [TransactionController::class, 'print'])->name('transactions.print');
 

@@ -18,13 +18,15 @@
     <div class="max-w-7xl mx-auto p-4"
     x-data="posKasir()" 
     >
-    <!-- @keydown.window="handleShortcut($event)" -->
+
+        
+        <!-- @keydown.window="handleShortcut($event)" -->
 
         <div class="grid grid-cols-12 gap-4">
 
             <!-- KIRI -->
 
-            <div class="col-span-4 space-y-4">
+            <div class="col-span-3 space-y-4">
 
                 <!-- INFO NOTA -->
 
@@ -49,25 +51,156 @@
 
                 <!-- PELANGGAN -->
 
-                <div class="bg-white rounded-xl shadow p-4">
+                <div class="bg-white rounded-xl shadow p-4 mb-4">
 
-                    <h2 class="font-bold text-lg mb-3">
+                    <label
+                        class="block text-sm font-semibold mb-2"
+                    >
                         Pelanggan
-                    </h2>
+                    </label>
 
-                    <input
-                        type="text"
-                        placeholder="Nama Pelanggan"
-                        class="w-full border rounded-lg p-2 mb-3"
+                    {{-- <button
+
+                        type="button"
+
+                        class="text-indigo-600 text-sm hover:underline"
+
                     >
 
-                    <input
-                        type="text"
-                        placeholder="No HP"
-                        class="w-full border rounded-lg p-2"
+                        + Tambah Pelanggan Baru
+
+                    </button> --}}
+                    <button
+                        type="button"
+                        @click="$dispatch('open-customer-modal')"
+                        class="text-indigo-600 text-sm hover:underline mb-1"
                     >
+                        + Tambah Pelanggan Baru
+                    </button>
+                    
+                    <div class="relative"
+                        @click.outside="customerResults=[]">
+
+                        <input
+
+                            x-ref="customerInput"
+
+                            type="text"
+
+                            x-model="customerSearch"
+
+                            @keydown.arrow-down.prevent="moveCustomerDown()"
+
+                            @keydown.arrow-up.prevent="moveCustomerUp()"
+
+                            @keydown.enter.prevent="chooseCustomer()"
+
+                            @keydown.escape.prevent="closeCustomerSearch()"
+
+                            @input="searchCustomer()"
+
+                            placeholder="Cari nama / kode pelanggan"
+
+                            class="w-full rounded-xl border border-slate-300 px-4 py-3"
+
+                        >
+
+                        <div
+
+                            x-show="customerResults.length"
+
+                            class="absolute left-0 right-0 top-full mt-1 bg-white border rounded-xl shadow-lg z-50 max-h-72 overflow-y-auto"
+
+                        >
+
+                            <template
+                            x-for="(customer,index) in customerResults"
+                            :key="customer.kode_pelanggan"
+                            >
+
+                                <div
+
+                                    @click="selectCustomer(customer)"
+
+                                    {{-- class="px-4 py-3 hover:bg-indigo-50 cursor-pointer border-b" --}}
+                                    :class="
+
+                                            customerIndex===index
+                                            ?
+                                            'bg-indigo-100'
+                                            :
+                                            ''
+                                        "
+
+                                    class="
+                                        px-4
+                                        py-3
+                                        cursor-pointer
+                                        hover:bg-indigo-50
+                                        border-b
+                                    "
+                                >
+
+                                    <div
+                                        class="font-semibold"
+                                        x-text="customer.nama"
+                                    ></div>
+
+                                    <!-- 💡 GANTI KODE JADI ALAMAT / TELEPON PADA DROPDOWN -->
+                                    <div class="text-xs text-slate-500" x-text="customer.alamat || customer.telepon || 'Tidak ada alamat/telp'"></div>
+
+                                    {{-- <div
+                                        class="text-xs text-slate-500"
+                                        x-text="customer.kode_pelanggan"
+                                    ></div> --}}
+
+                                </div>
+
+                            </template>
+
+                        </div>
+
+                    </div>
+
+                   
+
+                    <!-- Ganti x-show dengan template x-if -->
+                    <template x-if="selectedCustomer">
+
+                        <div class="mt-3">
+
+                            <div class="rounded-xl bg-indigo-50 p-3">
+
+                                <div
+                                    class="font-semibold"
+                                    x-text="selectedCustomer.nama"
+                                ></div>
+                                
+                                <div class="text-sm text-slate-600 mt-0.5" x-text="selectedCustomer.alamat || 'Alamat tidak diisi'"></div>
+
+                                <div class="text-xs text-slate-400" x-show="selectedCustomer.telepon" x-text="'Telp: ' + selectedCustomer.telepon"></div>
+                                
+                                {{-- <div
+                                    class="text-sm text-slate-500"
+                                    x-text="selectedCustomer.kode_pelanggan"
+                                ></div> --}}
+
+                                <button
+                                    @click="clearCustomer()"
+                                    class="mt-2 text-red-600 text-sm"
+                                >
+                                    Kosongkan Pelanggan
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </template>
 
                 </div>
+
+                
 
                 <!-- shortcut help -->
                  <div class="bg-white rounded-xl shadow p-4">
@@ -94,6 +227,11 @@
                         </div>
 
                         <div class="flex justify-between">
+                            <span>F8</span>
+                            <span>Pelanggan</span>
+                        </div>
+
+                        <div class="flex justify-between">
                             <span>F10</span>
                             <span>Simpan Transaksi</span>
                         </div>
@@ -112,7 +250,7 @@
 
             <!-- KANAN -->
 
-            <div class="col-span-8">
+            <div class="col-span-9">
 
                 <div 
                 class="bg-white rounded-xl shadow">
@@ -208,7 +346,9 @@
                                 <thead>
 
                                 <tr class="bg-gray-50">
-
+                                    <th class="text-center p-3 w-12">
+                                        No
+                                    </th>
                                     <th class="text-left p-3">
                                         Barang
                                     </th>
@@ -235,12 +375,13 @@
                                 <tbody>
 
                                   <template
-                                      x-for="item in cart"
+                                      x-for="(item, index) in cart"
                                       :key="item.id"
                                   >
 
                                   <tr class="border-b">
-
+                                      <!-- KOLOM NOMOR OTOMATIS BERDASARKAN BARIS -->  
+                                      <td class="p-3 text-center text-gray-500 font-medium bg-gray-50/50" x-text="index + 1"></td>
                                       <td class="p-3">
 
                                           <div
@@ -250,7 +391,13 @@
                                       </td>
 
                                       <td class="text-center">
+                                        {{-- @input="
 
+                                                if(item.qty<1) item.qty=1;
+
+                                                calculateItem(item)
+
+                                                " --}}
                                           <input
                                               type="number"
                                               min="1"
@@ -258,14 +405,7 @@
                                               x-model="item.qty"
                                               @change="validateQty(item)"
                                               @keydown.enter.prevent="$refs.barcodeInput.focus()"
-                                              @input="
-
-                                                if(item.qty<1)
-                                                item.qty=1;
-
-                                                calculateItem(item)
-
-                                                "
+                                              @input="calculateItem(item)"
                                               class="w-20 border rounded text-center p-1"
                                           />
 
@@ -304,7 +444,7 @@
                                   <tr x-show="cart.length===0">
 
                                       <td
-                                          colspan="4"
+                                          colspan="5"
                                           class="text-center p-10 text-gray-400"
                                       >
 
@@ -327,7 +467,7 @@
                     <div class="border-t p-4 flex justify-end">
 
                         <div class="w-full md:w-[420px]">
-{{-- =========================================================================== --}}
+        {{-- =========================================================================== --}}
                             {{-- REFACTOR PEMBAYARAN >>>>>>>>     --}}
 
                             <div class="bg-white rounded-xl  p-5 space-y-5">
@@ -364,18 +504,7 @@
 
                                 <hr>
 
-                                {{-- ======================= --}}
-                                {{-- CASH --}}
-                                {{-- ======================= --}}
-                                {{-- <x-input
-                                    label="Sayar"
-                                    name="byr"
-                                    icon="ri-wallet-3-line"
-                                    :value="0"
-                                    class="text-right"
-                                    width="w-40"
-                                    type="number"
-                                /> --}}
+                                
                                 
                                 <div class="flex justify-between items-center mb-3">
 
@@ -397,7 +526,7 @@
 
                                         x-model.number="cash"
 
-                                        @input=""
+                                        @input="recalculate()"
 
                                         class="text-right
 
@@ -460,13 +589,11 @@
                                         x-model.number="voucher"
 
                                         @input="
+                                            if(voucher<0)
+                                                voucher=0;
 
-                                        if(voucher<0)
-                                            voucher=0;
-
-                                        
-
-                                        "
+                                            recalculate();
+                                            "
 
                                         class="text-right
 
@@ -530,10 +657,10 @@
 
                                         @input="
 
-                                        if(card<0)
-                                            card=0;
+                                        {{-- if(card<0)
+                                            card=0; --}}
 
-                                        
+                                        recalculate();
 
                                         "
                                         class="text-right
@@ -681,152 +808,7 @@
 
                             </div>    
 
-                            {{-- REFACTOR PEMBAYARAN END >>>>>>>> --}}
-{{-- =========================================================================== --}}
-                            <!-- SUBTOTAL -->
-
-                            {{-- <div class="flex justify-between items-center mb-3">
-
-                                <span class="font-medium">
-                                    Subtotal
-                                </span>
-
-                                <span
-                                    class="font-medium"
-                                    x-text="'Rp ' + subtotal.toLocaleString('id-ID')"
-                                ></span>
-
-                            </div> --}}
-
-                            <!-- VOUCHER -->
-
-                            {{-- <div class="flex justify-between items-center mb-3">
-
-                                <label class="font-medium">
-                                    Voucher
-                                </label>
-
-                                <input
-                                    type="number"
-                                    x-model.number="voucher"
-                                    min="0"
-                                    class="w-40 border rounded-lg p-2 text-right"
-                                >
-
-                            </div> --}}
-
-                            <!-- CARD -->
-
-                            {{-- <div class="flex justify-between items-center mb-3">
-
-                                <label class="font-medium">
-                                    Card
-                                </label>
-
-                                <input
-                                    type="number"
-                                    x-model.number="card"
-                                    min="0"
-                                    class="w-40 border rounded-lg p-2 text-right"
-                                >
-
-                            </div> --}}
-
-                            {{-- krg bayar --}}
-                            {{-- <div
-                                class="flex justify-between items-center
-                                text-red-600
-                                font-bold text-xl
-                                mb-3">
-
-                                <span>Kurang Bayar</span>
-
-                                <span
-                                x-text="'Rp ' + kurangBayar.toLocaleString('id-ID')"
-                                ></span>
-
-                            </div> --}}
-                            {{-- krg bayar end --}}
                             
-                            {{-- kembalian --}}
-                            {{-- <div
-                                class="flex justify-between items-center
-                                text-green-600
-                                font-bold text-2xl
-                                mb-4">
-
-                                <span>Kembalian</span>
-
-                                <span
-                                x-text="'Rp ' + kembalian.toLocaleString('id-ID')"
-                                ></span>
-
-                            </div> --}}
-                            {{-- kembalian end --}}
-
-
-                            <!-- TOTAL -->
-
-                            {{-- <div
-                                class="flex justify-between items-center
-                                    border-t pt-3 mb-4
-                                    font-bold text-xl"
-                            >
-
-                                <span>Total</span>
-
-                                <span
-                                    x-text="'Rp ' + grandTotal.toLocaleString('id-ID')"
-                                ></span>
-
-                            </div> --}}
-
-                            <!-- BAYAR -->
-
-                            {{-- <div class="flex justify-between items-center mb-4">
-
-                                <label class="font-medium">
-                                    Bayar
-                                </label>
-
-                                <input
-                                    x-ref="cashInput"
-                                    type="text"
-                                    :value="cashDisplay"
-                                    @input="updateCash($event.target.value)"
-                                    class="w-40 border rounded-lg p-2 text-right text-lg"
-                                >
-
-                            </div> --}}
-
-                            <!-- KEMBALIAN -->
-
-                            {{-- <div
-                                class="flex justify-between items-center
-                                    text-green-600
-                                    font-bold text-2xl
-                                    mb-4"
-                            >
-
-                                <span>Kembalian</span>
-
-                                <span
-                                    x-text="'Rp ' + kembalian.toLocaleString('id-ID')"
-                                ></span>
-
-                            </div> --}}
-
-                            <!-- BUTTON -->
-
-                            {{-- <button
-                                x-ref="saveButton"
-                                @click="saveTransaction()"
-                                class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold"
-                            >
-
-                                SIMPAN TRANSAKSI (F10)
-
-                            </button> --}}
 
                         </div>
 
@@ -929,9 +911,137 @@
             </div>
 
         </div>
-        <!-- modal end -->
+
+        
+        
+        <!-- MODAL END -->
+
+        <!-- ========================================================== -->
+        <!-- MODAL TAMBAH PELANGGAN BARU (ISOLATED INLINE SCOPE) -->
+        <!-- ========================================================== -->
+        <div
+            x-data="{ 
+                showCustomerModal: false,
+                newCustomer: { nama: '', telepon: '', alamat: '' },
+                async saveNewCustomer() {
+                    if (!this.newCustomer.nama.trim()) {
+                        Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Nama pelanggan wajib diisi!' });
+                        return;
+                    }
+                    try {
+                        let response = await fetch('/api/customers', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name=&quot;csrf-token&quot;]').content
+                            },
+                            body: JSON.stringify(this.newCustomer)
+                        });
+                        let result = await response.json();
+                        if (result.success) {
+                            // 💡 Kirim data ke sistem kasir utama  menggunakan Custom Event
+                            window.dispatchEvent(new CustomEvent('customer-added', { detail: result.customer }));
+
+                            // Reset form
+                            this.newCustomer = { nama: '', telepon: '' , alamat: ''};
+                            this.showCustomerModal = false;
+                            
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: 'Pelanggan berhasil disimpan',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal menyimpan pelanggan' });
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        Swal.fire({ icon: 'error', title: 'Error', text: 'Terjadi kesalahan sistem' });
+                    }
+                }
+            }"
+            
+            @open-customer-modal.window="showCustomerModal = true; $nextTick(() => $refs.newCustomerName.focus())"
+            x-show="showCustomerModal"
+            x-cloak
+            class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            @keydown.escape.window="showCustomerModal = false;"
+        >
+        <!-- 💡 Listen ke event klik dari tombol luar -->
+            <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl transform transition-all" @click.outside="showCustomerModal = false">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-xl text-slate-800">
+                        <i class="ri-user-add-line mr-1 text-indigo-600"></i> Tambah Pelanggan Baru
+                    </h3>
+                    <button type="button" @click="showCustomerModal = false" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+                </div>
+
+                <!-- Form Body -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+                        <input 
+                            x-ref="newCustomerName"
+                            type="text" 
+                            x-model="newCustomer.nama" 
+                            @keydown.enter.prevent="$refs.newCustomerPhone.focus()"
+                            placeholder="Masukkan nama pelanggan..." 
+                            class="w-full border rounded-xl p-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none"
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">No. Telepon / HP</label>
+                        <input 
+                            x-ref="newCustomerPhone"
+                            type="text" 
+                            x-model="newCustomer.telepon" 
+                            @keydown.enter.prevent="saveNewCustomer()"
+                            placeholder="Contoh: 081234567xx (Opsional)" 
+                            class="w-full border rounded-xl p-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none"
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+                        <textarea 
+                            x-ref="newCustomerAlamat"
+                            x-model="newCustomer.alamat" 
+                            rows="2"
+                            placeholder="Masukkan alamat pelanggan... (Opsional)" 
+                            class="w-full border rounded-xl p-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <!-- Form Action Buttons -->
+                <div class="mt-6 flex justify-end gap-2">
+                    <button 
+                        type="button" 
+                        @click="showCustomerModal = false" 
+                        class="px-4 py-2 border rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50"
+                    >
+                        Batal
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="saveNewCustomer()" 
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium shadow-sm flex items-center"
+                    >
+                        <i class="ri-save-3-line mr-1"></i> Simpan Pelanggan
+                    </button>
+                </div>
+            </div>
+        </div>
+        
 
     </div>
+
+
+        
+
 <script>
 
 function posKasir() {
@@ -951,13 +1061,20 @@ function posKasir() {
         
         card: 0,
 
+        diskon: 0,
+
         // paymentTotal:0,
 
-        // kurangBayar:0,
+        kurangBayar:0,
 
-        // kembalian:0,
+        kembalian:0,
         
-        
+        // pelanggan
+        customerSearch: '',
+        customerResults: [],
+        selectedCustomer: null,
+        allCustomers: window.ALL_CUSTOMERS,
+
         cashDisplay: '',
 
         allProducts: window.ALL_PRODUCTS,
@@ -965,6 +1082,162 @@ function posKasir() {
         showPriceModal: false,
         priceSearch: '',
         priceResults: [],
+
+        // cari plggn
+        searchCustomer()
+        {
+            let keyword =
+                this.customerSearch
+                    .toLowerCase()
+                    .trim();
+
+            if(keyword.length < 2)
+            {
+                this.customerResults = [];
+
+                this.customerIndex = -1;
+
+                return;
+            }
+
+            this.customerResults =
+                this.allCustomers.filter(c =>
+
+                    c.nama
+                        .toLowerCase()
+                        .includes(keyword)
+
+                    ||
+
+                    c.kode_pelanggan
+                        .toLowerCase()
+                        .includes(keyword)
+
+                    // {
+                    // let isAktif = c.status == 1 || c.status === undefined; 
+
+                    // let matchKeyword = c.nama.toLowerCase().includes(keyword) ||
+                    //                 c.kode_pelanggan.toLowerCase().includes(keyword);
+
+                    // return isAktif && matchKeyword;
+                    // }
+                    
+                ).slice(0,8);
+                // hrs aktif 
+
+            this.customerIndex = -1;
+        },
+        // arrow down pilih pelanggan====
+        moveCustomerDown()
+        {
+            if(this.customerResults.length===0)
+                return;
+
+            if(
+                this.customerIndex <
+                this.customerResults.length-1
+            ){
+                this.customerIndex++;
+            }
+        },
+        // arrow up pilih pelanggan====
+        moveCustomerUp()
+        {
+            if(this.customerResults.length===0)
+                return;
+
+            if(this.customerIndex>0)
+            {
+                this.customerIndex--;
+            }
+        },
+
+        chooseCustomer()
+        {
+            if(
+                this.customerIndex<0
+            )
+                return;
+
+            this.selectCustomer(
+
+                this.customerResults[
+                    this.customerIndex
+                ]
+
+            );
+        },
+
+        selectCustomer(customer)
+        {
+            this.selectedCustomer = customer;
+
+            this.customerSearch =
+                customer.nama;
+
+            this.customerResults=[];
+
+            this.customerIndex=-1;
+
+            this.$nextTick(()=>{
+
+                // this.$refs.barcodeInput.focus();
+                document.getElementById('barcodeInput')?.focus();
+            });
+
+        },
+
+        closeCustomerSearch()
+        {
+            this.customerResults=[];
+
+            this.customerIndex=-1;
+
+            this.$nextTick(()=>
+            {
+                this.$refs.barcodeInput.focus();
+            });
+        },
+        
+        // kosongi plggn
+        clearCustomer(){
+
+            this.selectedCustomer = null;
+
+            this.customerSearch = '';
+
+            this.customerResults = [];
+
+            this.$nextTick(() => {
+                document.getElementById('barcodeInput')?.focus()
+            });
+
+
+        },
+        // potongan multiprice/grosiran
+        getDynamicPrice(product, qty) {
+            let hargaEceran = Number(product.harga);
+            let potonganTerpilih = 0;
+
+            // 💡 Pastikan membaca 'product_prices'
+            let grosirList = product.product_prices || []; 
+
+            if (grosirList && grosirList.length > 0) {
+                let sortedGrosir = [...grosirList].sort((a, b) => Number(b.min_qty) - Number(a.min_qty));
+                let match = sortedGrosir.find(g => Number(qty) >= Number(g.min_qty));
+                if (match) {
+                    potonganTerpilih = Number(match.potongan); 
+                }
+            }
+
+            return hargaEceran - potonganTerpilih;
+        },
+
+
+        get grandTotal()
+        {
+            return this.subtotal - this.diskon;
+        },
 
         // ESC utk close price checker
         closePriceModal()
@@ -989,6 +1262,8 @@ function posKasir() {
 
             this.cashDisplay = this.cash.toLocaleString('id-ID');
 
+            this.recalculate();
+
             
         },
 
@@ -1000,6 +1275,50 @@ function posKasir() {
 
          init()
         {
+            // xamidi==============================================
+            // 📡 Dengarkan kiriman data dari modal pelanggan baru
+            window.addEventListener('customer-added', (e) => {
+                const newCustomer = e.detail;
+
+                // ==========================================
+                // SOLUSI NO 2: MASUKKAN KE MEMORI PENCARIAN
+                // ==========================================
+                // 1. Masukkan ke array global window agar sinkron
+                if (window.ALL_CUSTOMERS) {
+                    window.ALL_CUSTOMERS.push(newCustomer);
+                }
+
+                // 2. Masukkan ke array local Alpine.js agar langsung bisa dicari saat diketik
+                if (this.allCustomers) {
+                    this.allCustomers.push(newCustomer);
+                }
+
+                // ==========================================
+                // SOLUSI NO 1: OTOMATIS PILIH PELANGGAN BARU
+                // ==========================================
+                // Jalankan fungsi selectCustomer bawaan POS  (jika ada)
+                if (typeof this.selectCustomer === 'function') {
+                    this.selectCustomer(newCustomer);
+                } else {
+                    // Jika tidak ada fungsi selectCustomer, kita set manual statenya
+                    this.selectedCustomer = newCustomer;
+                    this.customerSearch = newCustomer.nama; // Isi kolom pencarian dengan nama baru
+                    this.customerResults = []; // Bersihkan dropdown pencarian
+                }
+
+                // [OPSIONAL] JIKA POS  MENGGUNAKAN SELECT2 (Dropdown Biasa)
+                // Jika  menggunakan select2 untuk pilihan pelanggan, aktifkan kode di bawah ini:
+                /*
+                let select2El = $('#customer-select'); // Sesuaikan ID element select2 bos
+                if (select2El.length) {
+                    let newOption = new Option(newCustomer.nama, newCustomer.id, true, true);
+                    select2El.append(newOption).trigger('change');
+                }
+                */
+            });
+            // xamidi end==========================================
+
+
             window.addEventListener(
                 'keydown',
                 this.handleShortcut.bind(this)
@@ -1007,6 +1326,8 @@ function posKasir() {
              this.$nextTick(() => {
                 this.$refs.barcodeInput.focus();
             });
+
+            this.recalculate();
         },
 
         handleShortcut(e)
@@ -1044,6 +1365,33 @@ function posKasir() {
                 return;
             }
 
+            // pelanggan F8
+            if(e.key === 'F8')
+            {
+                e.preventDefault();
+
+                this.$refs.customerInput.focus();
+
+                this.$refs.customerInput.select();
+
+                return;
+            }
+
+            //pelanggan ESC
+            if(
+                e.key === 'Escape'
+                &&
+                this.customerResults.length
+            )
+            {
+                e.preventDefault();
+
+                this.closeCustomerSearch();
+
+                return;
+            }
+
+
             if(e.key === 'F4')
             {
                 e.preventDefault();
@@ -1075,41 +1423,72 @@ function posKasir() {
             }
         },
         
-        get subtotal()
-        {
-            return this.cart.reduce(
-                (total,item) =>
-                    total + (item.qty * item.harga),
-                0
-            );
+        // get subtotal()
+        // {
+        //     return this.cart.reduce(
+        //         (total,item) =>
+        //             total + (item.qty * item.harga),
+        //         0
+        //     );
 
             
-        },
+        // },
 
-        get paymentTotal()
+        // get paymentTotal()
+        // {
+        //     return (
+        //         Number(this.cash || 0) +
+        //         Number(this.voucher || 0) +
+        //         Number(this.card || 0)
+        //     );
+        // },
+
+        // get kurangBayar()
+        // {
+        //     return Math.max(
+        //         0,
+        //         this.subtotal - this.paymentTotal
+        //     );
+        // },
+
+        // get kembalian()
+        // {
+        //     return Math.max(
+        //         0,
+        //         this.paymentTotal - this.subtotal
+        //     );
+            
+        // },
+
+        subtotal: 0,
+
+        paymentTotal: 0,
+
+        kurangBayar: 0,
+
+        kembalian: 0,
+        
+        recalculate()
         {
-            return (
+            this.subtotal = this.cart.reduce(
+                // (total, item) => total + (item.qty * item.harga),
+                // 0
+                (total, item) => total + (Number(item.qty) * Number(item.harga)),
+                    0
+            );
+
+            // Amankan kalkulasi dari input kosong
+            let nilaiCash = Number(this.cash || 0);
+            let nilaiVoucher = Number(this.voucher || 0);
+            let nilaiCard = Number(this.card || 0);
+            
+            this.paymentTotal =
                 Number(this.cash || 0) +
                 Number(this.voucher || 0) +
-                Number(this.card || 0)
-            );
-        },
+                Number(this.card || 0);
 
-        get kurangBayar()
-        {
-            return Math.max(
-                0,
-                this.subtotal - this.paymentTotal
-            );
-        },
-
-        get kembalian()
-        {
-            return Math.max(
-                0,
-                this.paymentTotal - this.subtotal
-            );
-            
+            this.kurangBayar = Math.max(0, this.subtotal - this.paymentTotal);
+            this.kembalian   = Math.max(0, this.paymentTotal - this.subtotal);
         },
 
         removeItem(id)
@@ -1119,14 +1498,12 @@ function posKasir() {
                     item => item.id !== id
                 );
             
-            // this.calculateTotals();
-            console.log(this.cart);
-            console.log(this.subtotal);
-            
-
-            
+             this.$nextTick(() => {
+                this.recalculate();
+            });
             
         },
+
         // validasi qty
         validateQty(item)
         {
@@ -1137,51 +1514,60 @@ function posKasir() {
             }
         },
 
-        calculateItem(item){
-
+       calculateItem(item)
+        {
             item.qty = Number(item.qty);
+            // if (isNaN(item.qty) || item.qty < 1) item.qty = 1;
 
-            item.harga = Number(item.harga);
+            // 💡 HITUNG ULANG: Update harga jual jika kasir mengubah/mengetik angka Qty di tabel POS
+            if (item._originalProduct) {
+                item.harga = this.getDynamicPrice(item._originalProduct, item.qty);
+            }
 
-            // item.total =
-            //     (item.qty * item.harga);
-            
-            
+            // Bagian ini biarkan tetap dikalikan dengan item.harga yang sudah terupdate secara dinamis
+            item.total = item.qty * item.harga;
 
+            this.$nextTick(() => this.recalculate());
         },
-
        
 
         
         addToCart(product)
         {
-
-            let found =
-                this.cart.find(
-                    item => item.id === product.id
-                );
+            let found = this.cart.find(
+                item => item.id === product.id
+            );
 
             if(found)
             {
                 found.qty++;
+                // 💡 HITUNG ULANG: Update harga barang di cart berdasarkan qty baru setelah ditambah
+                found.harga = this.getDynamicPrice(found._originalProduct, found.qty);
             }
             else
             {
+                // 💡 AMBIL HARGA AWAL: Untuk qty = 1
+                let initialPrice = this.getDynamicPrice(product, 1);
+
                 this.cart.push({
                     id: product.id,
                     kode_barang: product.kode_barang,
                     nama_barang: product.nama_barang,
-                    harga: Number(product.harga),
-                    qty: 1
+                    harga: initialPrice,
+                    qty: 1,
+                    // 💡 WAJIB DISIMPAN: Menyimpan data produk asli (termasuk product_prices) 
+                    // sebagai acuan hitung grosir saat qty berubah nanti
+                    _originalProduct: product 
                 });
             }
 
             this.search = '';
             this.products = [];
-            
             this.selectedIndex = 0;
+
+            this.recalculate();
+
             this.$nextTick(() => {
-                // this.$refs.barcodeInput.focus();
                 document.getElementById('barcodeInput')?.focus()
             });
         },
@@ -1240,6 +1626,15 @@ function posKasir() {
             if(result.isConfirmed)
             {
                 this.cart = [];
+        
+                this.$nextTick(() => {
+                    this.recalculate();
+                    // Optional: reset payment jika mau (bisa di-comment dulu)
+                    this.cash = 0;
+                    this.voucher = 0;
+                    this.card = 0;
+                    this.kembalian=0;
+                });
 
                 this.$refs.barcodeInput.focus();
             }
@@ -1313,6 +1708,29 @@ function posKasir() {
                 return;
             }
 
+            // ==========================================================
+            // TAMBAHAN KONFIRMASI CETAK NOTA SEBELUM SIMPAN
+            // ==========================================================
+            const konfirmasiCetak = await Swal.fire({
+                title: 'Cetak Nota?',
+                text: 'Transaksi akan disimpan ke sistem',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya (Enter)',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#4f46e5', // Warna indigo agar serasi dengan tema Anda
+                returnFocus: false
+            });
+
+            // Jika user memilih Batal, batalkan proses submit
+            if (!konfirmasiCetak.isConfirmed) {
+                setTimeout(() => {
+                    document.getElementById('cash')?.focus();
+                    document.getElementById('cash')?.select();
+                }, 150);
+                return;
+            }
+
             let response =
                 await fetch(
                     '/api/transactions',
@@ -1333,22 +1751,20 @@ function posKasir() {
 
                         body:JSON.stringify({
 
-                            pelanggan:'',
+                            pelanggan:
+                            this.selectedCustomer
+                                ? this.selectedCustomer.kode_pelanggan
+                                : null,
 
                             cart:this.cart,
 
-                            subtotal:this.subtotal,
-
-                            voucher:this.voucher,
-
-                            card:this.card,
-
-                            // grand_total:this.subtotal,
-
-                            cash:this.cash,
-
-                            kembalian:
-                                this.kembalian
+                            // Validasi & Proteksi level JS: Jika kosong/null, paksa jadi 0
+                            subtotal: Number(this.subtotal || 0),
+                            voucher: Number(this.voucher || 0),
+                            card: Number(this.card || 0),
+                            grand_total: Number(this.subtotal || 0),
+                            cash: Number(this.cash || 0),
+                            kembalian: Number(this.kembalian || 0)
                         })
                     }
                 );
@@ -1426,6 +1842,9 @@ function posKasir() {
 window.ALL_PRODUCTS =
     @json($products);
 
+// load pelanggan
+window.ALL_CUSTOMERS =
+    @json($customers);
 
 </script>
 @endsection

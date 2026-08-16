@@ -13,104 +13,92 @@ class ImportTransactions extends Command
 
     public function handle()
     {
-        $this->info('IMPORT DATA TRANSAKSI');
+        $this->info('MULAI IMPORT MASTER TRANSACTIONS...');
 
-        $rows = DB::connection('mekarsari')
+        // 1. Matikan sementara Foreign Key Checks agar proses insert berjalan sangat cepat
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        DB::statement('SET UNIQUE_CHECKS=0;');
+
+        $insertCount = 0;
+
+        // 2. Gunakan Chunking 5.000 record per batch
+        DB::connection('mekarsari')
             ->table('pj_penjualan_master')
             ->orderBy('id_penjualan_m')
-            ->get();
+            ->chunk(5000, function ($rows) use (&$insertCount) {
+                
+                $batchData = [];
 
-        $insert = 0;
-        $update = 0;
+                foreach ($rows as $row) {
+                    // Kalkulasi Matematika Nilai Transaksi
+                    $grandTotal = (float) ($row->grand_total ?? 0);
+                    $diskon     = (float) ($row->potongan ?? 0);
+                    $subtotal   = $grandTotal + $diskon;
 
-        foreach ($rows as $row) {
+                    $cash    = (float) ($row->bayar ?? 0);
+                    $card    = (float) ($row->card ?? 0);
+                    $voucher = (float) ($row->voucher ?? 0);
 
-            // Pastikan user Mekarsari sudah ada di POS
-            $userId = DB::table('users')
-                ->where('id', $row->id_user)
-                ->value('id');
+                    $totalBayar = $cash + $card + $voucher;
+                    $kembalian  = max(0, $totalBayar - $grandTotal);
 
-            if (!$userId) {
-                $this->error(
-                    "User tidak ditemukan: id_user {$row->id_user}, " .
-                    "nota {$row->nomor_nota}"
-                );
+                    // Konversi Waktu
+                    $createdAt = $row->tanggal ?? now();
 
-                return Command::FAILURE;
-            }
-
-            // Mapping pelanggan.
-            // Boleh NULL karena transaksi tanpa pelanggan tetap valid.
-            $customerId = null;
-
-            if ($row->id_pelanggan !== null) {
-                $customerId = DB::table('customers')
-                    ->where('id', $row->id_pelanggan)
-                    ->value('id');
-
-                if (!$customerId) {
-                    $this->error(
-                        "Pelanggan tidak ditemukan: id_pelanggan {$row->id_pelanggan}, " .
-                        "nota {$row->nomor_nota}"
-                    );
-
-                    return Command::FAILURE;
+                    $batchData[] = [
+                        'id'          => $row->id_penjualan_m,
+                        'no_nota'     => $row->nomor_nota,
+                        'user_id'     => $row->id_user ?? 1, // Fallback user default jika null
+                        'shift_id'    => null,
+                        'pelanggan'   => $row->id_pelanggan ?: null,
+                        'telp'        => null,
+                        'subtotal'    => $subtotal,
+                        'diskon'      => $diskon,
+                        'grand_total' => $grandTotal,
+                        'cash'        => $cash,
+                        'voucher'     => $voucher,
+                        'card'        => $card,
+                        'kembalian'   => $kembalian,
+                        'catatan'     => $row->keterangan_lain,
+                        'status'      => 'SOLD',
+                        'created_at'  => $createdAt,
+                        'updated_at'  => $createdAt,
+                    ];
                 }
-            }
 
-            // Cek berdasarkan ID legacy.
-            $existing = DB::table('transactions')
-                ->where('id', $row->id_penjualan_m)
-                ->first();
+                // 3. Bulk Insert / Upsert massal dalam 1 Transaction Block
+                if (!empty($batchData)) {
+                    DB::transaction(function () use ($batchData) {
+                        DB::table('transactions')->upsert(
+                            $batchData,
+                            ['id'], // Primary Key constraint
+                            [
+                                'no_nota', 
+                                'user_id', 
+                                'pelanggan', 
+                                'subtotal', 
+                                'diskon', 
+                                'grand_total', 
+                                'cash', 
+                                'voucher', 
+                                'card', 
+                                'kembalian', 
+                                'catatan', 
+                                'updated_at'
+                            ]
+                        );
+                    });
 
-            $data = [
-                'no_nota'     => $row->nomor_nota,
-                'user_id'     => $userId,
-                'shift_id'    => null,
-                'pelanggan'   => $customerId,
-                'telp'        => null,
-                'subtotal'    => $row->grand_total,
-                'diskon'      => $row->potongan,
-                'grand_total' => $row->grand_total,
-                'cash'        => $row->bayar,
-                'voucher'     => $row->voucher,
-                'card'        => $row->card,
-                'kembalian'   => 0,
-                'catatan'     => $row->keterangan_lain,
-                'status'      => 'SOLD',
-                'created_at'  => $row->tanggal,
-                'updated_at'  => $row->tanggal,
-            ];
+                    $insertCount += count($batchData);
+                    $this->info("Berhasil memproses batch master transactions... Total: {$insertCount} records.");
+                }
+            });
 
-            if ($existing) {
+        // Nyalakan kembali check
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        DB::statement('SET UNIQUE_CHECKS=1;');
 
-                DB::table('transactions')
-                    ->where('id', $row->id_penjualan_m)
-                    ->update($data);
-
-                $update++;
-
-            } else {
-
-                DB::table('transactions')->insert([
-                    'id'          => $row->id_penjualan_m,
-                    ...$data,
-                ]);
-
-                $insert++;
-            }
-        }
-
-        $this->newLine();
-
-        $this->table(
-            ['Insert', 'Update'],
-            [
-                [$insert, $update]
-            ]
-        );
-
-        $this->info('Selesai.');
+        $this->info("SELESAI! Total {$insertCount} data master transaksi berhasil di-import/update.");
 
         return Command::SUCCESS;
     }
