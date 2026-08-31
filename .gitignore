@@ -41,3 +41,6 @@ Homestead.json
 
 #execute on local
 run-dev.bat
+
+# biar gak diintip di github
+public/deploy.php
