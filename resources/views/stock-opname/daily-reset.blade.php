@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Reset Stok Harian (Resto)')
+@section('title', 'Reset Stok Harian')
 
 @section('content')
 <x-page-header
-    title="Reset Stok Harian Resto"
-    subtitle="Modul pembersihan sisa bahan & produk untuk dipaksa menjadi NOL di akhir shift."
+    title="Reset Stok Harian"
+    subtitle="Modul pembersihan stok produk untuk dipaksa menjadi NOL di akhir shift."
 />
 
 @if(session('success'))
@@ -49,6 +49,20 @@
         <!-- Bagian Input Catatan Harian -->
         <x-card class="mb-6">
             <div class="max-w-xl space-y-4">
+                <!-- Dropdown Filter Stok -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Filter Stok Barang</label>
+                    <select 
+                        onchange="window.location.href = '{{ route('daily-reset.index') }}?stok_filter=' + this.value"
+                        class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                        <option value="semua" {{ $stokFilter == 'semua' ? 'selected' : '' }}>Semua Barang (Stok tidak Nol)</option>
+                        <option value="minus" {{ $stokFilter == 'minus' ? 'selected' : '' }}>Stok Minus</option>
+                        <option value="plus" {{ $stokFilter == 'plus' ? 'selected' : '' }}>Stok Plus</option>
+                    </select>
+                </div>
+
+
                 <x-input 
                     label="Alasan / Catatan Reset" 
                     name="notes" 

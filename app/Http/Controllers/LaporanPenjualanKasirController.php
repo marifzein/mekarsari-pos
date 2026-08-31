@@ -14,10 +14,11 @@ class LaporanPenjualanKasirController extends Controller
         // Default tanggal dari tanggal 1 bulan ini sampai tanggal hari ini (2026)
         $dari_tanggal = $request->get('dari_tanggal', Carbon::now()->startOfMonth()->toDateString());
         $sampai_tanggal = $request->get('sampai_tanggal', Carbon::now()->toDateString());
+        $kasir = $request->get('kasir');
 
         // Base Query untuk Laporan
         $query = DB::table('transactions')
-            ->join('users', 'transactions.user_id', '=', 'users.id')
+            ->join('users', 'transactions.user_id', '=', 'users.id')    
             ->select(
                 DB::raw('DATE(transactions.created_at) as tanggal'),
                 'users.name as nama_kasir',
@@ -27,8 +28,19 @@ class LaporanPenjualanKasirController extends Controller
                 DB::raw('SUM((transactions.cash - transactions.kembalian) + transactions.card + transactions.voucher) as total_grand')
             )
             ->whereBetween(DB::raw('DATE(transactions.created_at)'), [$dari_tanggal, $sampai_tanggal])
-            ->where('transactions.status', '!=', 'Batal') // 👈 FILTER EXCLUDE BATAL
-            ->groupBy(DB::raw('DATE(transactions.created_at)'), 'transactions.user_id', 'users.name')
+            ->where('transactions.status', '=', 'SOLD'); // 👈 FILTER HANYA SOLD
+            
+            // ->groupBy(DB::raw('DATE(transactions.created_at)'), 'transactions.user_id', 'users.name')
+            // ->orderBy('tanggal', 'asc')
+            // ->orderBy('nama_kasir', 'asc');
+
+
+        // Filter nama kasir jika diisi
+        if (!empty($kasir)) {
+            $query->where('users.name', 'LIKE', '%' . $kasir . '%');
+        }
+
+        $query->groupBy(DB::raw('DATE(transactions.created_at)'), 'transactions.user_id', 'users.name')
             ->orderBy('tanggal', 'asc')
             ->orderBy('nama_kasir', 'asc');
 
@@ -41,7 +53,13 @@ class LaporanPenjualanKasirController extends Controller
                 DB::raw('SUM((transactions.cash - transactions.kembalian) + transactions.card + transactions.voucher) as total_grand')
             )
             ->whereBetween(DB::raw('DATE(transactions.created_at)'), [$dari_tanggal, $sampai_tanggal])
-            ->where('transactions.status', '!=', 'Batal'); // 👈 FILTER EXCLUDE BATAL;
+            ->where('transactions.status', '=', 'SOLD'); // 👈 FILTER EXCLUDE BATAL;
+
+            // Filter nama kasir jika diisi
+        if (!empty($kasir)) {
+            $query->where('users.name', 'LIKE', '%' . $kasir . '%');
+        }
+
 
         // 🔑 PROTEKSI MULTI-ROLE:
         // Jika yang login memiliki role 'kasir', batasi hanya melihat datanya sendiri.
@@ -55,6 +73,6 @@ class LaporanPenjualanKasirController extends Controller
         $reports = $query->paginate(20)->withQueryString();
         $totals = $totalsQuery->first();
 
-        return view('laporan.penjualan-kasir', compact('reports', 'totals', 'dari_tanggal', 'sampai_tanggal'));
+        return view('laporan.penjualan-kasir', compact('reports', 'totals', 'dari_tanggal', 'sampai_tanggal', 'kasir'));
     }
 }

@@ -7,7 +7,7 @@ use App\Models\Product;
 use App\Models\StockMovement;
 use App\Models\StockOpname;
 use App\Models\StockOpnameDetail;
-use App\Helpers\DocumentNumber; // Menggunakan helper bawaan tokomu
+use App\Helpers\DocumentNumber; // Menggunakan helper 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,13 +16,34 @@ class DailyResetStockController extends Controller
     /**
      * Tampilkan daftar produk aktif yang stoknya > 0
      */
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::where('is_active', 1)
-                            ->where('stok', '>', 0)
-                            ->get();
+        // $products = Product::where('is_active', 1)
+        //                     ->get();
+        //                     // ->where('stok', '>', 0)
 
-        return view('stock-opname.daily-reset', compact('products'));
+        // return view('stock-opname.daily-reset', compact('products'));
+        // Default filter adalah 'semua' (semua barang selain stok 0)
+
+        
+        $stokFilter = $request->get('stok_filter', 'semua');
+
+        $query = Product::where('is_active', 1);
+
+        if ($stokFilter === 'minus') {
+            // Stok minus (< 0)
+            $query->where('stok', '<', 0);
+        } elseif ($stokFilter === 'plus') {
+            // Stok plus (> 0)
+            $query->where('stok', '>', 0);
+        } else {
+            // Semua barang (Stok tidak sama dengan 0)
+            $query->where('stok', '!=', 0);
+        }
+
+        $products = $query->get();
+
+        return view('stock-opname.daily-reset', compact('products', 'stokFilter'));
     }
 
     /**

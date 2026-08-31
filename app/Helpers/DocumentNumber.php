@@ -59,7 +59,7 @@ class DocumentNumber
         string $table,
         string $field,
         string $prefix,
-        int $digit = 6
+        int $digit = 4
     ): string {
 
         $last = DB::table($table)

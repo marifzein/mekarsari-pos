@@ -30,7 +30,9 @@ class ReturBarangController extends Controller
 
     public function create()
     {
-        $suppliers = DB::table('suppliers')->get();
+        $suppliers = DB::table('suppliers')
+            ->where('is_active', 1)
+            ->get();
         return view('retur.create', compact('suppliers'));
     }
 

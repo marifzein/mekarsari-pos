@@ -50,7 +50,7 @@ class UserController extends Controller
 
             'name'=>'required',
 
-            'email'=>'required|email|unique:users',
+            'email'=>'nullable|email|unique:users',
 
             'role'=>'required',
 

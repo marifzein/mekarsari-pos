@@ -1,447 +1,284 @@
 @extends('layouts.app')
 
-@section('title','Stock Opname')
+@section('title', 'Stock Opname')
 
 @section('content')
 
-{{-- alert status saving trx --}}
+{{-- Header Page --}}
+<x-page-header 
+    title="Stock Opname" 
+    subtitle="No SO: {{ $stockOpname->opname_no }} | Tanggal: {{ \Carbon\Carbon::parse($stockOpname->opname_date)->format('d-m-Y H:i') }}"
+>
+    <x-slot:action>
+        <div class="flex items-center gap-3">
+            @if($stockOpname->status == 'OPEN')
+                <span class="bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full text-xs font-bold tracking-wider">OPEN</span>
+            @else
+                <span class="bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-full text-xs font-bold tracking-wider">POSTED</span>
+            @endif
+
+            <a href="{{ url('/stock-opname') }}">
+                <x-button color="gray">
+                    <i class="ri-arrow-left-line"></i> Kembali
+                </x-button>
+            </a>
+        </div>
+    </x-slot:action>
+</x-page-header>
+
+{{-- Alert Notification --}}
 @if(session('success'))
-
-    <div class="mb-4 p-3 rounded bg-green-100 text-green-700">
-
+    <x-alert type="success" class="mb-4">
         {{ session('success') }}
-
-    </div>
-
-    @endif
-
-
-    @if(session('warning'))
-
-    <div class="mb-4 p-3 rounded bg-yellow-100 text-yellow-700">
-
-        {{ session('warning') }}
-
-    </div>
-
+    </x-alert>
 @endif
-{{-- end alert status saving trx --}}
- <div x-data="stockAdjustment()">
-    <form
-        id="formScanSO"
-        method="POST"
-        action="/stock-opname/{{ $stockOpname->id }}"
-    >
-        {{-- csrf utk POST , kalo meta utk AJAX --}}
-        @csrf
-        {{-- --- MODIFIKASI HEADER & TOMBOL KEMBALI DISINI --- --}}
-        <x-page-header title="Stock Opname" subtitle="No SO : {{ $stockOpname->opname_no }} | Tanggal : {{ \Carbon\Carbon::parse($stockOpname->opname_date)->format('d-m-Y H:i') }}">
-            <x-slot:action>
-                <div class="flex items-center gap-3">
-                    {{-- Badge Status --}}
-                    @if($stockOpname->status=='OPEN')
-                        <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-semibold">
-                            OPEN
-                        </span>
-                    @else
-                        <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">
-                            POSTED
-                        </span>
-                    @endif
 
-                    {{-- Tombol Kembali --}}
-                    @if($stockOpname->status=='OPEN')
-                         {{-- <a href="#"> --}}
-                        <x-button color="gray" type="button" disabled>
-                            <i class="ri-arrow-left-line"></i> Kembali
-                        </x-button>
-                        {{-- </a> --}}
-                    @else
-                         <a href="/stock-opname">
-                        <x-button color="gray" type="button">
-                            <i class="ri-arrow-left-line"></i> Kembali
-                        </x-button>
-                    </a>
-                    @endif
+@if(session('warning'))
+    <x-alert type="warning" class="mb-4">
+        {{ session('warning') }}
+    </x-alert>
+@endif
 
-                </div>
-            </x-slot:action>
-        </x-page-header>
-        {{-- --- END MODIFIKASI HEADER --- --}}
+<div x-data="stockAdjustment()">
+    
+    {{-- Form Area Menggunakan Komponen Card --}}
+    @if($stockOpname->status == 'OPEN')
+        <x-card class="mb-6">
+            <form id="formScanSO" method="POST" action="{{ url('/stock-opname/' . $stockOpname->id) }}">
+                @csrf
 
-        <div class="bg-white rounded-xl shadow p-4">
-            {{-- scan produk --}}
-        
-
-            <label class="font-semibold">
-                Scan Barcode / Cari Barang
-            </label>
-            {{-- <!-- Fitur Navigasi Keyboard --> --}}
-           <input
-                type="text"
-                x-model="keyword"
-                x-ref="barcodeInput"
-                
-                @if($stockOpname->status=='POSTED')
-                disabled
-                @endif
-                
-                @input="searchProduct"
-                
-                
-                @keydown.arrow-down.prevent="if (results.length > 0) selectedIndex = (selectedIndex + 1) % results.length"
-                @keydown.arrow-up.prevent="if (results.length > 0) selectedIndex = (selectedIndex - 1 + results.length) % results.length"
-                @keydown.enter.prevent="
-                    if (selectedIndex >= 0 && results[selectedIndex]) { 
-                        selectProduct(results[selectedIndex]); 
-                    } else { 
-                        searchProduct(); 
-                    }
-                "
-                @keydown.escape="results = []; selectedIndex = -1;"
-
-                placeholder="Scan barcode / ketik nama barang..."
-                class="w-full border rounded-lg p-2"
-            >
-
-            <!-- Dropdown Hasil Pencarian -->
-            <div
-                x-show="results.length"
-                class="border rounded-lg mt-2 bg-white max-h-56 overflow-auto"
-            >
-                <template
-                    x-for="(item, index) in results"
-                    :key="item.id"
-                >
-                    <!-- Ditambahkan class dynamic bg-purple-100 saat index terpilih -->
-                    <div
-                        class="p-2 hover:bg-gray-100 cursor-pointer transition-colors"
-                        :class="{ 'bg-purple-100 font-semibold': selectedIndex === index }"
-                        @click="selectProduct(item)"
-                        @mouseenter="selectedIndex = index"
-                    >
-                        <div x-text="item.nama_barang"></div>
-                        <small class="text-gray-500">
-                            Kode: <span x-text="item.kode_barang"></span> | 
-                            Stok: <span x-text="item.stok"></span>
-                        </small>
-                    </div>
-                </template>
-            </div>
-
-            <input
-                type="hidden"
-                name="product_id"
-                :value="selected.id"
-            >
-            {{-- scan produk end--}}
-
-            {{-- data hasil scan --}}
-            {{-- x-show="selected.id" --}}
-            <div class="mt-4 space-y-3" >
-                <div>
-
-                    <label>
-
-                        Kode Barang
-
+                {{-- 1. Input Scan / Cari Barang (Full Width) --}}
+                <div class="relative mb-6">
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        <i class="ri-scan-2-line text-indigo-600 mr-1"></i> Scan Barcode / Cari Barang
                     </label>
-
-                    <input
-                        readonly
-                        class="w-full border rounded-lg p-2 bg-gray-100"
-                        :value="selected.kode_barang ?? '-'"
-                    >
-
-                </div>
-
-                <div>
-
-                    <label>
-
-                    Nama Barang
-
-                    </label>
-
-                    <input
-                        readonly
-                        class="w-full border rounded-lg p-2 bg-gray-100"
-                        :value="selected.nama_barang ?? '-'"
-                    >
-
-                </div>
-
-                <div>
-
-                    <label>
-
-                    Stok Sistem
-
-                    </label>
-
-                    <input
-                        readonly
-                        class="w-full border rounded-lg p-2 bg-gray-100"
-                        :value="selected.stok ?? 0"
-                    >
-
-                </div>
-
-<!-- Input Stok Fisik / Jumlah Ditemukan -->
-                <div>
-                    <label class="font-semibold block mb-1">
-                        <!-- Label Berganti Secara Otomatis -->
-                        <span x-text="getScannedItem(selected.id) ? 'Jumlah ditemukan' : 'Stok Fisik'"></span>
-                    </label>
-
-                    <input
-                        type="number"
-                        name="stok_fisik"
-                        x-model="stokFisik"
-                        x-ref="stokFisikInput"
-
-                        @keydown.enter.prevent="
-                            document
-                            .getElementById('formScanSO')
-                            .requestSubmit()
-                        "
-
-                        @if($stockOpname->status=='POSTED')
-                        disabled
-                        @endif
-                        required
-                        class="w-full border rounded-lg p-2"
-                        :class="getScannedItem(selected.id) ? 'border-purple-400 bg-purple-50/50' : 'border-gray-300'"
-                    >
-                </div>
-
-                <!-- Hasil Selisih Aktual Komputer -->
-                <div>
-                    <label class="font-semibold block mb-1">
-                        Selisih
-                    </label>
-
-                    <input
-                        readonly
-                        class="w-full border rounded-lg p-2 font-bold"
-                        :class="{
-                            'text-green-600': getComputedSelisih() > 0,
-                            'text-red-600': getComputedSelisih() < 0,
-                            'text-gray-700': getComputedSelisih() == 0
-                        }"
-                        :value="getComputedSelisih()"
-                    >
-                </div>
-
-                <div class="mt-4">
-
-                    <label class="font-semibold">
-                        Keterangan
-                    </label>
-
-                    <input
-                        type="text"
-                        name="notes"
-                        class="w-full border rounded-lg p-2"
-                    >
-
-                </div>
-
-
-                {{-- button simpan --}}
-                <div class="mt-6">
                     
-                    {{-- kalo udah diclosing/diposting maka button hilang--}}
-                    @if($stockOpname->status=='OPEN')
-                        <button
-                            type="submit"
-                            
-                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg"
+                    <div class="relative group">
+                        <i class="ri-search-line absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-all text-lg"></i>
+                        <input
+                            type="text"
+                            x-model="keyword"
+                            x-ref="barcodeInput"
+                            @if($stockOpname->status == 'POSTED') disabled @endif
+                            @input="searchProduct"
+                            @keydown.arrow-down.prevent="if (results.length > 0) selectedIndex = (selectedIndex + 1) % results.length"
+                            @keydown.arrow-up.prevent="if (results.length > 0) selectedIndex = (selectedIndex - 1 + results.length) % results.length"
+                            @keydown.enter.prevent="
+                                if (selectedIndex >= 0 && results[selectedIndex]) { 
+                                    selectProduct(results[selectedIndex]); 
+                                } else { 
+                                    searchProduct(); 
+                                }
+                            "
+                            @keydown.escape="results = []; selectedIndex = -1;"
+                            placeholder="Scan barcode atau ketik nama barang..."
+                            class="w-full rounded-xl border border-slate-300 pl-12 pr-4 py-3 text-slate-700 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all duration-200"
                         >
-                            Simpan Stok Opname
-                        </button>
-                    @endif
+                    </div>
 
-                    {{-- tambahan info --}}
-                    <hr class="my-8">
-
-                        <h3 class="text-xl font-bold mb-4">
-
-                            Barang yang sudah di Scan
-
-                        </h3>
-
-                        <div class="bg-white rounded-xl shadow">
-
-                        <table class="w-full">
-
-                        <thead class="bg-gray-100">
-
-                        <tr>
-
-                        <th class="p-3 text-left">
-                        Kode
-                        </th>
-
-                        <th>
-                        Barang
-                        </th>
-
-                        <th class="text-center">
-                        Sistem
-                        </th>
-
-                        <th class="text-center">
-                        Fisik
-                        </th>
-
-                        <th class="text-center">
-                        Selisih
-                        </th>
-
-                        </tr>
-
-                        </thead>
-
-                        <tbody id="tbodySO">
-
-                        @forelse($details as $item)
-
-                        <tr class="border-t">
-
-                        <td class="p-3">
-
-                        {{ $item->product->kode_barang }}
-
-                        </td>
-
-                        <td>
-
-                        {{ $item->product->nama_barang }}
-
-                        </td>
-
-                        <td class="text-center">
-
-                        {{ $item->stock_system }}
-
-                        </td>
-
-                        <td class="text-center">
-
-                        {{ $item->stock_physical }}
-
-                        </td>
-
-                        <td class="text-center">
-
-                        {{ $item->difference }}
-
-                        </td>
-
-                        </tr>
-
-                        @empty
-
-                        <tr>
-
-                        <td
-                        colspan="5"
-                        class="text-center py-6 text-gray-500"
-                        >
-
-                        Belum ada barang.
-
-                        </td>
-
-                        </tr>
-
-                        @endforelse
-
-                        </tbody>
-
-                        </table>
-
-                        </div>
-                    {{-- tambahan info end --}}
+                    {{-- Dropdown Result --}}
+                    <div
+                        x-show="results.length"
+                        class="absolute z-30 left-0 right-0 border border-slate-200 rounded-xl mt-2 bg-white shadow-xl max-h-60 overflow-y-auto divide-y divide-slate-100"
+                    >
+                        <template x-for="(item, index) in results" :key="item.id">
+                            <div
+                                class="p-3 hover:bg-indigo-50/50 cursor-pointer transition-colors"
+                                :class="{ 'bg-indigo-50 font-semibold': selectedIndex === index }"
+                                @click="selectProduct(item)"
+                                @mouseenter="selectedIndex = index"
+                            >
+                                <div class="text-sm font-bold text-slate-800" x-text="item.nama_barang"></div>
+                                <small class="text-slate-500 text-xs">
+                                    Kode: <span class="font-mono" x-text="item.kode_barang"></span> | 
+                                    Stok Sistem: <span class="font-bold text-slate-700" x-text="item.stok"></span>
+                                </small>
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
+                <input type="hidden" name="product_id" :value="selected.id">
+
+                {{-- 2. Grid 2 Kolom (Kiri: Info Produk, Kanan: Input Fisik) --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
+                    
+                    {{-- Kolom Kiri: Readonly Informasi Produk --}}
+                    <div class="space-y-4 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80">
+                        <div class="font-semibold text-xs uppercase tracking-wider text-slate-400">Informasi Produk</div>
+                        
+                        <x-input
+                            label="Kode Barang"
+                            name="readonly_kode"
+                            icon="ri-qr-code-line"
+                            x-bind:value="selected.kode_barang ?? '-'"
+                            readonly
+                        />
+
+                        <x-input
+                            label="Nama Barang"
+                            name="readonly_nama"
+                            icon="ri-box-3-line"
+                            x-bind:value="selected.nama_barang ?? '-'"
+                            readonly
+                        />
+
+                        <x-input
+                            label="Stok Sistem"
+                            name="readonly_stok"
+                            icon="ri-archive-line"
+                            x-bind:value="selected.stok ?? 0"
+                            readonly
+                        />
+                    </div>
+
+                    {{-- Kolom Kanan: Penyesuaian Fisik --}}
+                    <div class="space-y-4 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80">
+                        <div class="font-semibold text-xs uppercase tracking-wider text-slate-400">Penyesuaian Fisik</div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                <span x-text="getScannedItem(selected.id) ? 'Jumlah Ditemukan' : 'Stok Fisik'"></span>
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative group">
+                                <i class="ri-hashtag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 text-lg"></i>
+                                <input
+                                    type="number"
+                                    name="stok_fisik"
+                                    x-model="stokFisik"
+                                    x-ref="stokFisikInput"
+                                    @keydown.enter.prevent="document.getElementById('formScanSO').requestSubmit()"
+                                    @if($stockOpname->status == 'POSTED') disabled @endif
+                                    required
+                                    class="w-full rounded-xl border pl-12 pr-4 py-3 font-bold text-slate-800 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all duration-200"
+                                    :class="getScannedItem(selected.id) ? 'border-purple-300 bg-purple-50/50' : 'border-slate-300 bg-white'"
+                                >
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Selisih Real</label>
+                            <input
+                                readonly
+                                class="w-full rounded-xl border border-slate-300 px-4 py-3 font-extrabold text-base outline-none transition-all duration-200"
+                                :class="{
+                                    'text-emerald-600 bg-emerald-50 border-emerald-300': getComputedSelisih() > 0,
+                                    'text-rose-600 bg-rose-50 border-rose-300': getComputedSelisih() < 0,
+                                    'text-slate-600 bg-slate-100': getComputedSelisih() == 0
+                                }"
+                                :value="getComputedSelisih()"
+                            >
+                        </div>
+
+                        <x-input
+                            label="Catatan / Keterangan"
+                            name="notes"
+                            icon="ri-file-text-line"
+                            placeholder="Opsional (misal: Kemasan rusak, dll)"
+                            :readonly="$stockOpname->status == 'POSTED'"
+                        />
+                    </div>
+
+                </div>
+
+                {{-- Action Submit --}}
+                @if($stockOpname->status == 'OPEN')
+                    <div class="flex justify-end mt-6 pt-4 border-t border-slate-200">
+                        <x-button color="primary" type="submit">
+                            <i class="ri-save-line"></i> Simpan Stok Opname
+                        </x-button>
+                    </div>
+                @endif
+            </form>
+        </x-card>
+    @endif
+    
+    {{-- Data Tabel Riwayat Scan --}}
+    <x-card>
+        <div class="font-semibold text-slate-700 mb-4 flex items-center gap-2">
+            <i class="ri-history-line text-indigo-600 text-lg"></i> Barang yang Sudah Di-Scan
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full text-left text-sm text-slate-600">
+                <thead class="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
+                    <tr>
+                        <th class="p-3">Kode</th>
+                        <th class="p-3">Nama Barang</th>
+                        <th class="p-3 text-center">Sistem</th>
+                        <th class="p-3 text-center">Fisik</th>
+                        <th class="p-3 text-center">Selisih</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodySO" class="divide-y divide-slate-100">
+                    @forelse($details as $item)
+                        <tr class="hover:bg-slate-50/50 transition">
+                            <td class="p-3 font-mono text-slate-500">{{ $item->product->kode_barang }}</td>
+                            <td class="p-3 font-semibold text-slate-800">{{ $item->product->nama_barang }}</td>
+                            <td class="p-3 text-center font-medium">{{ $item->stock_system }}</td>
+                            <td class="p-3 text-center font-bold text-indigo-600">{{ $item->stock_physical }}</td>
+                            <td class="p-3 text-center font-bold">
+                                <span class="{{ $item->difference > 0 ? 'text-emerald-600' : ($item->difference < 0 ? 'text-rose-600' : 'text-slate-500') }}">
+                                    {{ $item->difference }}
+                                </span>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="text-center py-8 text-slate-400">
+                                <i class="ri-inbox-line text-2xl block mb-1"></i>
+                                Belum ada barang yang di-scan.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        {{-- Footer Action Bar --}}
+        <div class="mt-6 pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
+            <div>
+                @if($stockOpname->status == 'OPEN')    
+                    <form id="formFinishSO" method="POST" action="{{ url('/stock-opname/' . $stockOpname->id . '/finish') }}">
+                        @csrf
+                        <x-button color="primary" type="submit">
+                            <i class="ri-check-double-line"></i> Posting Stock Opname
+                        </x-button>
+                    </form>
+                @endif
             </div>
 
-        
-
-        
-    </form>
-    {{-- jika SO blm diclosing/diposting --}}
-    
-
-    <div class="mt-6 flex gap-3">
-    @if($stockOpname->status=='OPEN')    
-    <form
-        id="formFinishSO"
-        method="POST"
-        action="/stock-opname/{{ $stockOpname->id }}/finish"
-    >
-
-    @csrf
-
-    <button
-    type="submit"
-    class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg"
-    >
-
-    Posting Stock Opname
-
-    </button>
-
-    
-
-    </form>
-    @endif
-    {{-- jika SO blm diclosing/diposting end--}}
-
-
-    {{-- button cetak --}}
-    <a
-    href="/stock-opname/{{ $stockOpname->id }}/print"
-    target="_blank"
-    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg "
-    >
-
-    Cetak
-
-    </a>
-    {{-- button cetak end --}}
-
-    </div>
-
-    
-
-    
-
+            @if($stockOpname->status == 'POSTED')  
+            <a href="{{ url('/stock-opname/' . $stockOpname->id . '/print') }}" target="_blank">
+                <x-button color="orange">
+                    <i class="ri-printer-line"></i> Cetak
+                </x-button>
+            </a>
+            @endif
+        </div>
+    </x-card>
 </div>
-<script>
 
-    function stockAdjustment()
-    {
+@push('scripts')
+<script>
+    function stockAdjustment() {
         return {
-            keyword:'',
-            results:[],
-            selected:{},
-            stokFisik:0,
+            keyword: '',
+            results: [],
+            selected: {},
+            stokFisik: 0,
             selectedIndex: -1,
             
-            // Masukkan data barang yang sudah di-scan dari server ke state Alpine.js
             scannedItems: @json($details->map(function($d) {
                 return [
                     'product_id' => $d->product_id,
-                    'stock_system' => $d->stock_system, // <-- Tambahkan ini untuk merekam stok sistem awal (140)
+                    'stock_system' => $d->stock_system,
                     'stock_physical' => $d->stock_physical
                 ];
             })),
 
-            init()
-            {
+            init() {
                 this.$watch('selected.id', (id) => {
                     if (!id) return;
                     requestAnimationFrame(() => {
@@ -451,46 +288,36 @@
                 });
 
                 this.$nextTick(() => {
-                    this.$refs.barcodeInput.focus();
+                    this.$refs.barcodeInput?.focus();
                 });
             },
             
-            async searchProduct()
-            {
-                if(this.keyword.length < 1)
-                {
-                    this.results=[];
+            async searchProduct() {
+                if(this.keyword.length < 1) {
+                    this.results = [];
                     this.selectedIndex = -1;
                     return;
                 }
 
-                // let r = await fetch('/api/retur/search-products?q=' + encodeURIComponent(this.keyword));
                 let r = await fetch('/api/products/search?q=' + encodeURIComponent(this.keyword));
                 this.results = await r.json();
                 this.selectedIndex = -1;
 
-                if(this.results.length == 1)
-                {
+                if(this.results.length == 1) {
                     this.selectProduct(this.results[0]);
                 }
             },
 
-            // Helper untuk mengecek apakah produk sudah pernah di-scan
             getScannedItem(productId) {
                 return this.scannedItems.find(item => item.product_id === productId);
             },
 
-            selectProduct(item)
-            {
+            selectProduct(item) {
                 this.selected = item;
-                
-                // Cek status riwayat scan produk ini
                 let history = this.getScannedItem(item.id);
                 if (history) {
-                    // Scan Ke-2 dst: Default input fisik diisi 0 (tinggal input jumlah ditemukan saja)
                     this.stokFisik = 0; 
                 } else {
-                    // Scan Ke-1: Default disamakan dengan stok sistem awal
                     this.stokFisik = item.stok;
                 }
 
@@ -499,7 +326,6 @@
                 this.selectedIndex = -1;
             },
 
-            // Mengembalikan nilai selisih aktual secara reaktif ke UI komputer
             getComputedSelisih() {
                 if (!this.selected.id) return 0;
                 
@@ -507,41 +333,30 @@
                 let qtyDitemukanSekarang = parseInt(this.stokFisik || 0);
                 
                 if (history) {
-                    // SEPERTI DI SKRINŠUT: Total Fisik Komulatif = (Fisik Sebelumnya + Input Ditemukan Baru)
                     let totalFisikBaru = parseInt(history.stock_physical) + qtyDitemukanSekarang;
-                    let stokSistemAwal = parseInt(history.stock_system); // Angka 140
-                    
-                    // Rumus Selisih Aktual Opname: Total Fisik Komulatif - Stok Sistem Awal
+                    let stokSistemAwal = parseInt(history.stock_system);
                     return totalFisikBaru - stokSistemAwal; 
                 } else {
-                    // Scan Ke-1 normal: Stok Fisik Baru - Stok Sistem
                     let systemAwal = parseInt(this.selected.stok ?? 0);
                     return qtyDitemukanSekarang - systemAwal;
                 }
             },
 
-            resetForm()
-            {
-                this.keyword='';
-                this.results=[];
-                this.selected={};
-                this.stokFisik=0;
+            resetForm() {
+                this.keyword = '';
+                this.results = [];
+                this.selected = {};
+                this.stokFisik = 0;
                 this.selectedIndex = -1;
-                this.$nextTick(()=>{
-                    this.$refs.barcodeInput.focus();
+                this.$nextTick(() => {
+                    this.$refs.barcodeInput?.focus();
                 });
             }
         }
     }
 
-    
-    // ajax2
-    document
-    .getElementById('formScanSO')
-    .addEventListener('submit', async function(e){
-        console.log("submit ajax");
+    document.getElementById('formScanSO')?.addEventListener('submit', async function(e) {
         e.preventDefault();
-
         let form = this;
         let url = form.action;
         let formData = new FormData(form);
@@ -549,35 +364,26 @@
         try {
             let response = await fetch(url, {
                 method: 'POST',
-                headers: {
-                    'Accept': 'application/json'
-                },
+                headers: { 'Accept': 'application/json' },
                 body: formData
             });
 
             let result = await response.json();
 
-            if(result.success){
+            if(result.success) {
                 Swal.fire({
                     toast: true,
-                    position: 'center',
+                    position: 'top-end',
                     icon: 'success',
-                    title: 'Sukses',
-                    text: result.message,
+                    title: result.message,
                     showConfirmButton: false,
-                    timer: 800
+                    timer: 1200
                 });
 
-                // Cek jika response-nya adalah update akumulasi data lama
                 if (result.is_update) {
-                    // Reload halaman agar tabel di bawah otomatis menampilkan hitungan terbaru dari DB
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 800);
+                    setTimeout(() => { window.location.reload(); }, 800);
                 } else {
-                    // Jika barang benar-benar baru, masukkan langsung ke tabel tanpa reload
                     tambahBaris(result.detail);
-                    
                     let alpineElement = document.querySelector('[x-data="stockAdjustment()"]');
                     if (alpineElement && window.Alpine) {
                         Alpine.$data(alpineElement).resetForm();
@@ -585,85 +391,52 @@
                     form.querySelector('input[name="notes"]').value = '';
                 }
             }
-
-        }
-        catch(error){
-            console.error("Detail Error JS:", error); 
+        } catch(error) {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Terjadi kesalahan sistem di browser: ' + error.message
+                text: 'Terjadi kesalahan sistem: ' + error.message
             });
         }
     });
 
-
-    // tambah baris baru via AJAX
-    function tambahBaris(item){
+    function tambahBaris(item) {
         let tbody = document.getElementById('tbodySO');
-
-        // --- CEK & HAPUS BARIS "BELUM ADA BARANG" JIKA ADA ---
         if (tbody.rows.length === 1 && tbody.rows[0].cells.length === 1) {
             tbody.innerHTML = '';
         }
 
+        let diffClass = item.difference > 0 ? 'text-emerald-600' : (item.difference < 0 ? 'text-rose-600' : 'text-slate-500');
+
         tbody.insertAdjacentHTML(
             'beforeend',
             `
-            <tr class="border-t">
-                <td class="p-3">${item.kode_barang}</td>
-                <td>${item.nama_barang}</td>
-                <td class="text-center">${item.stock_system}</td>
-                <td class="text-center">${item.stock_physical}</td>
-                <td class="text-center">${item.difference}</td>
+            <tr class="hover:bg-slate-50/50 transition border-t border-slate-100">
+                <td class="p-3 font-mono text-slate-500">${item.kode_barang}</td>
+                <td class="p-3 font-semibold text-slate-800">${item.nama_barang}</td>
+                <td class="p-3 text-center font-medium">${item.stock_system}</td>
+                <td class="p-3 text-center font-bold text-indigo-600">${item.stock_physical}</td>
+                <td class="p-3 text-center font-bold ${diffClass}">${item.difference}</td>
             </tr>
             `
         );
     }
 
-    // ===============================
-    // Posting Stock Opname
-    // ===============================
-
-    document
-    .getElementById('formFinishSO')
-    ?.addEventListener('submit',function(e){
-
+    document.getElementById('formFinishSO')?.addEventListener('submit', function(e) {
         e.preventDefault();
-
-        let form=this;
-
+        let form = this;
         Swal.fire({
-
-            icon:'question',
-
-            title:'Posting Stock Opname?',
-
-            html:`
-                Setelah diposting,
-                <br>
-                <b>Stock Opname tidak dapat diedit lagi.</b>
-            `,
-
-            showCancelButton:true,
-
-            confirmButtonText:'Ya, Posting',
-
-            cancelButtonText:'Batal',
-
-            confirmButtonColor:'#16a34a'
-
-        })
-        .then((result)=>{
-
-            if(result.isConfirmed){
-
-                form.submit();
-
-            }
-
+            icon: 'question',
+            title: 'Posting Stock Opname?',
+            html: 'Setelah diposting, <b>Stock Opname tidak dapat diedit lagi.</b>',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Posting',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#059669'
+        }).then((result) => {
+            if(result.isConfirmed) form.submit();
         });
-
     });
 </script>
+@endpush
 @endsection

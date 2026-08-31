@@ -65,7 +65,7 @@
             <div id="menu-kasir" class="menu-content" x-show="sidebarOpen">
                 <a href="/pos" class="submenu {{ request()->is('pos') ? 'submenu-active' : '' }}"><i class="ri-shopping-cart-2-line"></i> POS</a>
 
-                <a href="/pos/mobile" class="submenu {{ request()->is('pos/mobile*') ? 'submenu-active' : '' }}"><i class="ri-shopping-cart-2-line"></i> POS Mobile</a>
+                {{-- <a href="/pos/mobile" class="submenu {{ request()->is('pos/mobile*') ? 'submenu-active' : '' }}"><i class="ri-shopping-cart-2-line"></i> POS Mobile</a> --}}
 
                 <a href="/pos/close-shift" class="submenu {{ request()->is('pos/close-shift*') ? 'submenu-active' : '' }}"><i class="ri-shut-down-line"></i> Tutup Shift</a>
                 <a href="/transactions" class="submenu {{ request()->is('transactions*') ? 'submenu-active':'' }}"><i class="ri-price-tag-3-line"></i> Riwayat Transaksi</a>
@@ -198,9 +198,9 @@
                 <a href="{{ route('retur.index') }}" class="submenu {{ request()->is('retur*') ? 'submenu-active' : '' }}"><i class="ri-arrow-go-back-line"></i> Retur Barang</a>
                 <a href="/stock-opname" class="submenu {{ request()->is('stock-opname*') ? 'submenu-active':'' }}"><i class="ri-survey-line"></i> Stok Opname</a>
                 <a href="/stock-adjustments" class="submenu {{ request()->is('stock-adjustments*') ? 'submenu-active':'' }}"><i class="ri-equalizer-line"></i> Penyesuaian Stok</a>
+{{--                 
+                <a href="/inventory/daily-reset" class="submenu {{ request()->is('daily-reset*') ? 'submenu-active':'' }}"><i class="ri-equalizer-line"></i> Opname Harian</a> --}}
                 
-                <a href="/inventory/daily-reset" class="submenu {{ request()->is('daily-reset*') ? 'submenu-active':'' }}"><i class="ri-equalizer-line"></i> Opname Harian</a>
-                {{-- route('daily-reset.index') --}}
                 @endcan
             </div>
 
@@ -317,7 +317,7 @@
         {{-- AKUNTING --}}
         {{-- ===================== --}}
         @can('akses-developer')
-        <div class="relative group" x-data="{ hovered: false }" @mouseenter="hovered = true" @mouseleave="hovered = false">
+        {{-- <div class="relative group" x-data="{ hovered: false }" @mouseenter="hovered = true" @mouseleave="hovered = false">
             <button type="button" 
                 @click="if (sidebarOpen) { toggleMenu('akunting') }"
                 class="menu-parent menu-group w-full px-4 py-3 flex items-center justify-between focus:outline-none">
@@ -350,7 +350,7 @@
                     <i class="ri-bank-card-line text-base opacity-60 group-hover:opacity-100"></i> Master COA
                 </a>
             </div>
-        </div>
+        </div> --}}
         @endcan
 
         {{-- ===================== --}}

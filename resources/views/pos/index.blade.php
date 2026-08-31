@@ -807,6 +807,13 @@
 
                                 </div>
 
+                                <!-- PESAN PERINGATAN KEMBALIAN TERLALU BESAR -->
+                                <template x-if="kembalian >= 100000">
+                                    <div class="text-right text-xs text-red-600 font-bold mt-1 bg-red-50 p-1.5 rounded-lg border border-red-200">
+                                        <i class="ri-error-warning-line mr-1"></i> Kembalian terlalu besar, Cek ulang angka yang anda input!
+                                    </div>
+                                </template>
+
                                 <hr>
 
                                 <button
@@ -1741,6 +1748,28 @@ function posKasir() {
 
                 return;
             }
+
+            // ==========================================================
+            // VALIDASI KEMBALIAN TERLALU BESAR (> 100RB)
+            // ==========================================================
+            if (this.kembalian >= 100000) {
+                await Swal.fire({
+                    icon: 'warning',
+                    title: 'Perhatian!',
+                    text: 'Kembalian terlalu besar (Rp ' + this.formatRupiah(this.kembalian) + '), Cek ulang Diskon,Cash, Voucher, Card, Hutang ',
+                    confirmButtonText: 'Cek Ulang',
+                    confirmButtonColor: '#e11d48', // warna merah warning
+                    returnFocus: false
+                });
+
+                setTimeout(() => {
+                    document.getElementById('cash')?.focus();
+                    document.getElementById('cash')?.select();
+                }, 150);
+
+                return; // Batalkan proses simpan
+            }
+
 
             // ==========================================================
             // TAMBAHAN KONFIRMASI CETAK NOTA SEBELUM SIMPAN

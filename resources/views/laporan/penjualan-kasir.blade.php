@@ -21,23 +21,29 @@
         </div>
 
         <!-- Filter Tanggal -->
-        {{-- <form method="GET" action="{{ route('laporan.penjualan-kasir') }}" class="bg-slate-50 border border-slate-100 rounded-xl p-5 mb-6"> --}}
+        
         <form method="GET" action="{{ route('laporan.penjualan-kasir') }}" class="bg-slate-50 border border-slate-200/80 rounded-xl p-4 sm:p-5 mb-6">
-            {{-- <div class="flex flex-wrap items-end gap-5"> --}}
             <div class="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-4">
-                {{-- <div class="w-full sm:w-auto"> --}}
+                
                 <div class="w-full sm:w-auto flex-1">
                     <label class="block text-sm font-semibold text-slate-700 mb-2">Dari Tanggal</label>
                     <input type="date" name="dari_tanggal" value="{{ $dari_tanggal }}" 
                         class="rounded-xl border border-slate-300 px-4 py-2.5 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 w-full sm:w-56">
                 </div>
-                {{-- <div class="w-full sm:w-auto"> --}}
+                
                 <div class="w-full sm:w-auto flex-1">
                     <label class="block text-sm font-semibold text-slate-700 mb-2">Sampai Tanggal</label>
                     <input type="date" name="sampai_tanggal" value="{{ $sampai_tanggal }}" 
                         class="rounded-xl border border-slate-300 px-4 py-2.5 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 w-full sm:w-56">
                 </div>
-                {{-- <div> --}}
+                
+                <!-- INPUT FILTER NAMA KASIR -->
+                <div class="w-full sm:w-auto flex-1">
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Nama Kasir</label>
+                    <input type="text" name="kasir" value="{{ $kasir ?? '' }}" placeholder="Semua Kasir..."
+                        class="rounded-xl border border-slate-300 px-4 py-2.5 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 w-full">
+                </div>
+
                 <div class="w-full sm:w-auto">
                     <button type="submit" class="px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition duration-150">
                         Tampilkan
