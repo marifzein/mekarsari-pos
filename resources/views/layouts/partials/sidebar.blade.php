@@ -47,7 +47,7 @@
         </div>
 
         {{-- ===================== --}}
-        {{-- PENJUALAN --}}
+        {{-- TRANSAKSI --}}
         {{-- ===================== --}}
         <div class="relative group" x-data="{ hovered: false }" @mouseenter="hovered = true" @mouseleave="hovered = false">
             <!-- UBAH BAGIAN INI -->
